@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="DocPulse AI dashboard — analytics overview of your documents" />
+<title>DocPulse AI · Dashboard</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html" class="brand"><div class="dot-logo"></div>DocPulse AI</a>
+    <nav></nav>
+  </div>
+
+  <div class="container">
+    <!-- Greeting -->
+    <div class="card">
+      <h1>Dashboard</h1>
+      <p class="greeting" id="greeting"></p>
+    </div>
+
+    <!-- Stats -->
+    <div class="card">
+      <h2>Overview</h2>
+      <div class="stat-grid" id="statGrid">
+        <div class="page-loader" style="grid-column:1/-1;">
+          <div class="spinner-ring"></div>
+          Loading stats…
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Breakdown -->
+    <div class="card">
+      <h2>By Status</h2>
+      <div id="statusBreakdown" class="muted">
+        <div class="page-loader"><div class="spinner-ring"></div></div>
+      </div>
+    </div>
+
+    <!-- Type Breakdown -->
+    <div class="card">
+      <h2>By Document Type</h2>
+      <div id="typeBreakdown" class="muted">
+        <div class="page-loader"><div class="spinner-ring"></div></div>
+      </div>
+    </div>
+
+    <!-- Recent Documents -->
+    <div class="card">
+      <h2>Recent Documents</h2>
+      <div id="recentContent">
+        <div class="page-loader"><div class="spinner-ring"></div>Loading…</div>
+      </div>
+    </div>
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="brand-signature">
+        <div class="dot-logo"></div>
+        <strong>DocPulse AI</strong> — Engineered by Tarun P
+      </div>
+      <div style="display:flex;gap:20px;">
+        <a href="index.html">Home</a>
+        <a href="upload.html">Upload</a>
+        <a href="dashboard.html">Dashboard</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script>
+    requireAuth();
+    document.getElementById("logoutLink").addEventListener("click", confirmLogout);
+
+    // Greeting
+    const user = getUser();
+    const hour = new Date().getHours();
+    const greetWord = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+    document.getElementById("greeting").innerHTML =
+      `${greetWord}, <strong>${user ? user.name : "there"}</strong>. Here's your document overview.`;
+
+    function buildProgressBar(count, total, color) {
+      const pct = total > 0 ? (count / total * 100) : 0;
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <span style="font-size:0.88rem;font-weight:500;text-transform:capitalize;">${color.label}</span>
+          <span class="muted" style="font-size:0.82rem;">${count}</span>
+        </div>
+        <div class="progress-bar" style="margin-top:0;margin-bottom:16px;">
+          <div class="fill" style="width:${pct}%;background:${color.bg};"></div>
+        </div>
+      `;
+    }
+
+    async function loadDashboard() {
+      try {
+        const d = await Api.dashboardSummary();
+
+        // Stats
+        const processed = d.by_status?.processed || 0;
+        const failed = d.by_status?.failed || 0;
+        document.getElementById("statGrid").innerHTML = `
+          <div class="stat">
+            <div class="num">${d.total_documents}</div>
+            <div class="label">Total Documents</div>
+          </div>
+          <div class="stat">
+            <div class="num">${processed}</div>
+            <div class="label">Processed</div>
+          </div>
+          <div class="stat">
+            <div class="num">${d.total_chat_messages}</div>
+            <div class="label">Chat Messages</div>
+          </div>
+          <div class="stat">
+            <div class="num">${failed}</div>
+            <div class="label">Failed</div>
+          </div>
+        `;
+
+        // Animate counters
+        document.querySelectorAll('.stat .num').forEach(el => {
+          const target = parseInt(el.textContent);
+          if (isNaN(target) || target === 0) return;
+          el.textContent = '0';
+          let current = 0;
+          const step = Math.max(1, Math.ceil(target / 30));
+          const interval = setInterval(() => {
+            current = Math.min(current + step, target);
+            el.textContent = current;
+            if (current >= target) clearInterval(interval);
+          }, 30);
+        });
+
+        // Status breakdown with progress bars
+        const statusColors = {
+          processed:  { label: "Processed",  bg: "var(--gradient-brand)" },
+          processing: { label: "Processing", bg: "linear-gradient(90deg, #f5c05a, #ffa06b)" },
+          uploaded:   { label: "Uploaded",   bg: "var(--gradient-purple)" },
+          failed:     { label: "Failed",     bg: "var(--gradient-warm)" },
+        };
+        const statusEntries = Object.entries(d.by_status || {});
+        document.getElementById("statusBreakdown").innerHTML = statusEntries.length
+          ? statusEntries.map(([k, v]) =>
+              buildProgressBar(v, d.total_documents, statusColors[k] || { label: k, bg: "var(--gradient-brand)" })
+            ).join("")
+          : '<p class="muted">No data yet.</p>';
+
+        // Type breakdown
+        const typeEntries = Object.entries(d.by_type || {});
+        const typeColors = {
+          invoice: "var(--gradient-brand)", contract: "var(--gradient-purple)",
+          resume: "linear-gradient(90deg,#5ee6c8,#6c8cff)", report: "linear-gradient(90deg,#f5c05a,#ff6b6b)",
+          other: "linear-gradient(90deg,#8b95a5,#5a6374)",
+        };
+        document.getElementById("typeBreakdown").innerHTML = typeEntries.length
+          ? typeEntries.map(([k, v]) =>
+              buildProgressBar(v, d.total_documents, { label: k || "unknown", bg: typeColors[k] || typeColors.other })
+            ).join("")
+          : '<p class="muted">No data yet.</p>';
+
+        // Recent documents
+        const recentContainer = document.getElementById("recentContent");
+        if (d.recent_documents && d.recent_documents.length) {
+          recentContainer.innerHTML = `
+            <table>
+              <thead>
+                <tr><th>Document</th><th>Type</th><th>Status</th><th></th></tr>
+              </thead>
+              <tbody>
+                ${d.recent_documents.map(doc => `
+                  <tr>
+                    <td style="font-weight:500;">${doc.filename}</td>
+                    <td><span class="badge">${doc.doc_type || "unknown"}</span></td>
+                    <td><span class="badge ${doc.status}">${doc.status}</span></td>
+                    <td><a href="chat.html?doc=${doc.id}" style="font-size:0.85rem;font-weight:500;">Chat →</a></td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          `;
+        } else {
+          recentContainer.innerHTML = `
+            <div class="empty-state">
+              <div class="icon">📊</div>
+              <h3>No documents yet</h3>
+              <p>Upload some documents to see analytics here.</p>
+            </div>
+          `;
+        }
+      } catch (e) {
+        document.getElementById("statGrid").innerHTML = `<p class="error">${e.message}</p>`;
+      }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

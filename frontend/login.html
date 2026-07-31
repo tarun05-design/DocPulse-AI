@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Sign in to DocPulse AI — your intelligent document understanding platform" />
+<title>DocPulse AI · Sign in</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html" class="brand"><div class="dot-logo"></div>DocPulse AI</a>
+    <nav></nav>
+  </div>
+
+  <div class="container" style="max-width: 440px; padding-top: 40px;">
+    <div class="card">
+      <div class="brand" style="display:flex;align-items:center;gap:10px;margin-bottom:28px;">
+        <div class="dot" style="width:12px;height:12px;border-radius:50%;background:var(--gradient-brand);box-shadow:0 0 10px var(--accent-glow);"></div>
+        <h1 style="margin:0;font-size:1.4rem;">DocPulse AI</h1>
+      </div>
+
+      <!-- Login Form -->
+      <div id="loginForm">
+        <h2 style="margin-bottom:4px;">Welcome back</h2>
+        <p class="muted" style="margin-bottom:24px;font-size:0.88rem;">Sign in to your account to continue</p>
+        <div class="error" id="loginError"></div>
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" />
+        <label for="loginPassword">Password</label>
+        <div style="position:relative;">
+          <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+          <button type="button" class="btn-icon" onclick="togglePasswordVisibility('loginPassword', this)" style="position:absolute;right:8px;top:8px;border:none;width:28px;height:28px;" aria-label="Toggle password visibility">👁</button>
+        </div>
+        <button id="loginBtn" onclick="doLogin()" style="width:100%;">
+          <span class="spinner"></span>
+          Sign in
+        </button>
+        <p class="muted" style="margin-top:20px;text-align:center;font-size:0.85rem;">
+          No account? <a href="#" onclick="toggleForm(event)">Create one</a>
+        </p>
+      </div>
+
+      <!-- Register Form -->
+      <div id="registerForm" style="display:none;">
+        <h2 style="margin-bottom:4px;">Create account</h2>
+        <p class="muted" style="margin-bottom:24px;font-size:0.88rem;">Get started with DocPulse AI</p>
+        <div class="error" id="registerError"></div>
+        <label for="regName">Full name</label>
+        <input type="text" id="regName" placeholder="Ada Lovelace" autocomplete="name" />
+        <label for="regEmail">Email</label>
+        <input type="email" id="regEmail" placeholder="you@example.com" autocomplete="email" />
+        <label for="regPassword">Password</label>
+        <div style="position:relative;">
+          <input type="password" id="regPassword" placeholder="Min. 6 characters" autocomplete="new-password" />
+          <button type="button" class="btn-icon" onclick="togglePasswordVisibility('regPassword', this)" style="position:absolute;right:8px;top:8px;border:none;width:28px;height:28px;" aria-label="Toggle password visibility">👁</button>
+        </div>
+        <button id="registerBtn" onclick="doRegister()" style="width:100%;">
+          <span class="spinner"></span>
+          Create account
+        </button>
+        <p class="muted" style="margin-top:20px;text-align:center;font-size:0.85rem;">
+          Already have an account? <a href="#" onclick="toggleForm(event)">Sign in</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="brand-signature">
+        <div class="dot-logo"></div>
+        <strong>DocPulse AI</strong> — Engineered by Tarun P
+      </div>
+      <div style="display:flex;gap:20px;">
+        <a href="index.html">Home</a>
+        <a href="login.html">Login</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script>
+    function toggleForm(e) {
+      e && e.preventDefault();
+      const l = document.getElementById("loginForm");
+      const r = document.getElementById("registerForm");
+      l.style.display = l.style.display === "none" ? "block" : "none";
+      r.style.display = r.style.display === "none" ? "block" : "none";
+    }
+
+    function togglePasswordVisibility(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "🙈";
+      } else {
+        input.type = "password";
+        btn.textContent = "👁";
+      }
+    }
+
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      if (loading) btn.classList.add("loading");
+      else btn.classList.remove("loading");
+    }
+
+    async function doLogin() {
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      const errBox = document.getElementById("loginError");
+      errBox.textContent = "";
+      if (!email || !password) { errBox.textContent = "Please fill in all fields."; return; }
+      setLoading("loginBtn", true);
+      try {
+        const { token, user } = await Api.login(email, password);
+        setSession(token, user);
+        window.location.href = "upload.html";
+      } catch (e) {
+        errBox.textContent = e.message;
+      } finally {
+        setLoading("loginBtn", false);
+      }
+    }
+
+    async function doRegister() {
+      const name = document.getElementById("regName").value.trim();
+      const email = document.getElementById("regEmail").value.trim();
+      const password = document.getElementById("regPassword").value;
+      const errBox = document.getElementById("registerError");
+      errBox.textContent = "";
+      if (!name || !email || !password) { errBox.textContent = "Please fill in all fields."; return; }
+      setLoading("registerBtn", true);
+      try {
+        const { token, user } = await Api.register(name, email, password);
+        setSession(token, user);
+        window.location.href = "upload.html";
+      } catch (e) {
+        errBox.textContent = e.message;
+      } finally {
+        setLoading("registerBtn", false);
+      }
+    }
+
+    // Allow Enter key submission
+    document.getElementById("loginPassword").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") doLogin();
+    });
+    document.getElementById("regPassword").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") doRegister();
+    });
+
+    // Redirect if already logged in
+    if (getToken()) window.location.href = "upload.html";
+  </script>
+</body>
+</html>

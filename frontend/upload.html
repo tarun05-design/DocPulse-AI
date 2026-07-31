@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Upload and manage your documents in DocPulse AI" />
+<title>DocPulse AI · Upload</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html" class="brand"><div class="dot-logo"></div>DocPulse AI</a>
+    <nav></nav>
+  </div>
+
+  <div class="container">
+    <!-- Upload Section -->
+    <div class="card">
+      <h1>Upload a document</h1>
+      <p class="muted" style="margin-bottom:20px;font-size:0.88rem;">PDF, DOCX, TXT, PNG, JPG, TIFF or BMP · up to 25 MB</p>
+
+      <div class="dropzone" id="dropzone">
+        <span class="icon">📄</span>
+        <p>Drag & drop a file here, or <strong style="color:var(--accent);">browse</strong></p>
+        <p class="subtext">Your document will be processed automatically with OCR + AI analysis</p>
+        <input type="file" id="fileInput" style="display:none" accept=".pdf,.png,.jpg,.jpeg,.tiff,.bmp,.docx,.txt" />
+        <div id="filePreview"></div>
+      </div>
+
+      <div class="error" id="uploadError" style="margin-top:12px;"></div>
+      <div id="uploadStatus" style="margin-top:12px;"></div>
+    </div>
+
+    <!-- Documents List -->
+    <div class="card">
+      <h2>Your documents</h2>
+      <div id="docContent">
+        <div class="page-loader" id="docLoader">
+          <div class="spinner-ring"></div>
+          Loading documents…
+        </div>
+      </div>
+    </div>
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="brand-signature">
+        <div class="dot-logo"></div>
+        <strong>DocPulse AI</strong> — Engineered by Tarun P
+      </div>
+      <div style="display:flex;gap:20px;">
+        <a href="index.html">Home</a>
+        <a href="upload.html">Upload</a>
+        <a href="dashboard.html">Dashboard</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script>
+    requireAuth();
+    document.getElementById("logoutLink").addEventListener("click", confirmLogout);
+
+    // ─── Dropzone logic ───
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("fileInput");
+    let selectedFile = null;
+
+    dropzone.addEventListener("click", (e) => {
+      if (e.target.closest(".file-preview")) return;
+      fileInput.click();
+    });
+
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.classList.add("drag");
+    });
+
+    dropzone.addEventListener("dragleave", () => dropzone.classList.remove("drag"));
+
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("drag");
+      if (e.dataTransfer.files.length) {
+        selectedFile = e.dataTransfer.files[0];
+        showFilePreview(selectedFile);
+        handleUpload(selectedFile);
+      }
+    });
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files.length) {
+        selectedFile = fileInput.files[0];
+        showFilePreview(selectedFile);
+        handleUpload(selectedFile);
+      }
+    });
+
+    function showFilePreview(file) {
+      const preview = document.getElementById("filePreview");
+      const ext = file.name.split('.').pop().toLowerCase();
+      const icons = { pdf: '📕', docx: '📘', txt: '📝', png: '🖼️', jpg: '🖼️', jpeg: '🖼️', tiff: '🖼️', bmp: '🖼️' };
+      preview.innerHTML = `
+        <div class="file-preview">
+          <span class="file-icon">${icons[ext] || '📄'}</span>
+          <div class="file-info">
+            <div class="file-name">${file.name}</div>
+            <div class="file-size">${formatFileSize(file.size)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    let pollTimer = null;
+
+    async function handleUpload(file) {
+      const errBox = document.getElementById("uploadError");
+      const statusBox = document.getElementById("uploadStatus");
+      errBox.textContent = "";
+      statusBox.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;color:var(--accent);font-size:0.88rem;font-weight:500;">
+          <div class="spinner-ring" style="width:18px;height:18px;border-width:2px;"></div>
+          Uploading & analyzing "${file.name}" with AI…
+        </div>
+        <div class="progress-bar" style="margin-top:10px;"><div class="fill" id="uploadProgress" style="width:65%;"></div></div>
+      `;
+
+      try {
+        await Api.uploadDocument(file);
+        const progressEl = document.getElementById("uploadProgress");
+        if (progressEl) progressEl.style.width = "100%";
+        statusBox.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;color:#10b981;font-size:0.88rem;font-weight:500;margin-top:8px;">
+            <span>✨</span> Upload complete! AI analysis (OCR, Embeddings & Gemini) is running...
+          </div>
+        `;
+        setTimeout(() => {
+          document.getElementById("filePreview").innerHTML = "";
+        }, 1000);
+        showToast("Document uploaded! AI analysis is running.", "success");
+        loadDocuments();
+      } catch (e) {
+        errBox.textContent = e.message;
+        statusBox.innerHTML = "";
+        showToast("Upload failed: " + e.message, "error");
+      }
+    }
+
+    // ─── Document list ───
+    function statusBadge(status) {
+      if (status === "processing") {
+        return `<span class="badge processing" style="display:inline-flex;align-items:center;gap:6px;"><span class="spinner-ring" style="width:10px;height:10px;border-width:1.5px;"></span> processing</span>`;
+      }
+      return `<span class="badge ${status}">${status}</span>`;
+    }
+
+    async function deleteDoc(id, filename) {
+      const confirmed = await showConfirm(
+        "Delete document?",
+        `This will permanently delete "${filename}" and all associated data (entities, embeddings, chat history).`
+      );
+      if (!confirmed) return;
+      try {
+        await Api.deleteDocument(id);
+        showToast("Document deleted", "success");
+        loadDocuments();
+      } catch (e) {
+        showToast("Delete failed: " + e.message, "error");
+      }
+    }
+
+    async function loadDocuments() {
+      if (pollTimer) clearTimeout(pollTimer);
+      const container = document.getElementById("docContent");
+      try {
+        const res = await Api.listDocuments();
+        const docs = res.documents || res; // handle both paginated and legacy
+
+        if (!docs.length) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="icon">📂</div>
+              <h3>No documents yet</h3>
+              <p>Upload your first document to get started with AI-powered analysis.</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Document</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Uploaded</th>
+                <th></th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${docs.map(d => `
+                <tr>
+                  <td style="font-weight:500;">${d.filename}</td>
+                  <td><span class="badge">${d.doc_type || "processing..."}</span></td>
+                  <td>${statusBadge(d.status)}</td>
+                  <td class="muted" style="font-size:0.82rem;">${timeAgo(d.uploaded_at)}</td>
+                  <td><a href="chat.html?doc=${d.id}" style="font-size:0.85rem;font-weight:500;">Chat →</a></td>
+                  <td style="display:flex;gap:4px;">
+                    <button class="btn-icon" onclick="Api.downloadDocument('${d.id}', '${d.filename.replace(/'/g, "\\'")}')" title="Download original document">📥</button>
+                    <button class="btn-icon" onclick="deleteDoc('${d.id}', '${d.filename.replace(/'/g, "\\'")}')" title="Delete document">🗑</button>
+                  </td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        `;
+
+        if (docs.some(d => d.status === "processing" || d.status === "uploaded")) {
+          pollTimer = setTimeout(loadDocuments, 800);
+        }
+      } catch (e) {
+        container.innerHTML = `<p class="error">${e.message}</p>`;
+      }
+    }
+
+    loadDocuments();
+  </script>
+</body>
+</html>

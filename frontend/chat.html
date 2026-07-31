@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Chat with your document using AI-powered Q&A in DocPulse AI" />
+<title>DocPulse AI · Chat</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html" class="brand"><div class="dot-logo"></div>DocPulse AI</a>
+    <nav></nav>
+  </div>
+
+  <div class="container">
+    <div class="split-layout" id="mainLayout">
+      <!-- Sidebar — Document Info -->
+      <div class="sidebar">
+        <div class="card">
+          <h1 id="docTitle" style="font-size:1.15rem;">Loading…</h1>
+          <p class="muted" id="docMeta" style="margin-top:4px;font-size:0.82rem;"></p>
+        </div>
+
+        <!-- Summary -->
+        <div class="card">
+          <div class="collapsible-header open" onclick="toggleCollapsible(this)">
+            <h3 style="margin:0;">📝 Summary</h3>
+            <span class="arrow">▼</span>
+          </div>
+          <div class="collapsible-body open">
+            <p id="docSummary" class="muted">Loading…</p>
+          </div>
+        </div>
+
+        <!-- Risks -->
+        <div class="card">
+          <div class="collapsible-header open" onclick="toggleCollapsible(this)">
+            <h3 style="margin:0;">⚠️ Risks & Flags</h3>
+            <span class="arrow">▼</span>
+          </div>
+          <div class="collapsible-body open">
+            <p id="docRisks" class="muted">Loading…</p>
+          </div>
+        </div>
+
+        <!-- Action Items -->
+        <div class="card">
+          <div class="collapsible-header" onclick="toggleCollapsible(this)">
+            <h3 style="margin:0;">✅ Action Items</h3>
+            <span class="arrow">▼</span>
+          </div>
+          <div class="collapsible-body">
+            <p id="docActions" class="muted">Loading…</p>
+          </div>
+        </div>
+
+        <!-- Entities -->
+        <div class="card" id="entitiesCard" style="display:none;">
+          <div class="collapsible-header" onclick="toggleCollapsible(this)">
+            <h3 style="margin:0;">🏷️ Extracted Entities</h3>
+            <span class="arrow">▼</span>
+          </div>
+          <div class="collapsible-body">
+            <div class="entity-chips" id="entityChips"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main — Chat -->
+      <div class="main">
+        <div class="card" style="display:flex;flex-direction:column;min-height:520px;">
+          <h2>💬 Chat with this document</h2>
+          <div class="chat-window" id="chatWindow" style="flex:1;"></div>
+          <div class="error" id="chatError"></div>
+          <div class="chat-input-row">
+            <textarea id="questionInput" rows="1" placeholder="Ask a question about this document…" aria-label="Question input"></textarea>
+            <button id="askBtn" onclick="sendQuestion()">Ask</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="brand-signature">
+        <div class="dot-logo"></div>
+        <strong>DocPulse AI</strong> — Engineered by Tarun P
+      </div>
+      <div style="display:flex;gap:20px;">
+        <a href="index.html">Home</a>
+        <a href="upload.html">Upload</a>
+        <a href="dashboard.html">Dashboard</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script>
+    requireAuth();
+    document.getElementById("logoutLink").addEventListener("click", confirmLogout);
+
+    const params = new URLSearchParams(window.location.search);
+    const docId = params.get("doc");
+    if (!docId) window.location.href = "upload.html";
+
+    // ─── Collapsible sections ───
+    function toggleCollapsible(header) {
+      header.classList.toggle("open");
+      const body = header.nextElementSibling;
+      body.classList.toggle("open");
+    }
+
+    // ─── Load document details ───
+    let chatPollTimer = null;
+
+    async function loadDoc() {
+      if (chatPollTimer) clearTimeout(chatPollTimer);
+      try {
+        const doc = await Api.getDocument(docId);
+        document.getElementById("docTitle").textContent = doc.filename;
+        document.getElementById("docMeta").innerHTML =
+          `<span class="badge">${doc.doc_type || "processing..."}</span> <span class="badge ${doc.status}">${doc.status}</span>`;
+
+        if (doc.status === "processing" || doc.status === "uploaded") {
+          document.getElementById("docSummary").innerHTML = `<div style="display:flex;align-items:center;gap:8px;color:var(--accent);font-size:0.85rem;"><div class="spinner-ring" style="width:14px;height:14px;border-width:1.5px;"></div> AI is analyzing document... Details will refresh automatically.</div>`;
+          document.getElementById("docRisks").textContent = "Analyzing risks & compliance checks...";
+          document.getElementById("docActions").textContent = "Extracting action items...";
+          chatPollTimer = setTimeout(loadDoc, 1500);
+        } else {
+          document.getElementById("docSummary").textContent = doc.summary || "No summary available.";
+          document.getElementById("docRisks").textContent = doc.risks || "No risks identified.";
+          document.getElementById("docActions").textContent = doc.action_items || "No action items identified.";
+        }
+
+        // Entities
+        if (doc.entities && doc.entities.length > 0) {
+          document.getElementById("entitiesCard").style.display = "block";
+          const chips = document.getElementById("entityChips");
+          chips.innerHTML = doc.entities.map(e =>
+            `<span class="entity-chip ${e.type}">${e.type}: ${e.value}</span>`
+          ).join("");
+        }
+      } catch (e) {
+        document.getElementById("docTitle").textContent = "Error";
+        document.getElementById("docMeta").textContent = e.message;
+      }
+    }
+
+    // ─── Chat ───
+    function appendMessage(role, text, timestamp) {
+      const win = document.getElementById("chatWindow");
+      const div = document.createElement("div");
+      div.className = `msg ${role}`;
+      const time = timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+      const body = role === 'a' ? formatMessageContent(text) : escapeHtml(text);
+      div.innerHTML = `${body}${time ? `<span class="timestamp">${time}</span>` : ''}`;
+      win.appendChild(div);
+      win.scrollTop = win.scrollHeight;
+    }
+
+    function formatMessageContent(text) {
+      if (!text) return "";
+      let html = escapeHtml(text);
+
+      // Convert **bold** to <strong>bold</strong>
+      html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+      // Convert URLs into clickable links
+      html = html.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:var(--accent-2);text-decoration:underline;">$1</a>');
+
+      const lines = html.split('\n');
+      let formattedLines = lines.map(line => {
+        let trimmed = line.trim();
+        if (trimmed.startsWith('•') || trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          const content = trimmed.replace(/^[•\-\*]\s*/, '');
+          return `<div class="chat-bullet-row"><span class="chat-bullet-icon">•</span><div class="chat-bullet-text">${content}</div></div>`;
+        }
+        return line ? `<div class="chat-text-line">${line}</div>` : '<div class="chat-spacer"></div>';
+      });
+
+      return formattedLines.join('');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function showTyping() {
+      const win = document.getElementById("chatWindow");
+      const div = document.createElement("div");
+      div.className = "typing-indicator";
+      div.id = "typingIndicator";
+      div.innerHTML = "<span></span><span></span><span></span>";
+      win.appendChild(div);
+      win.scrollTop = win.scrollHeight;
+    }
+
+    function hideTyping() {
+      const el = document.getElementById("typingIndicator");
+      if (el) el.remove();
+    }
+
+    async function loadHistory() {
+      try {
+        const history = await Api.chatHistory(docId);
+        history.forEach(h => {
+          appendMessage("q", h.question, h.created_at);
+          appendMessage("a", h.answer, h.created_at);
+        });
+      } catch (e) {
+        document.getElementById("chatError").textContent = e.message;
+      }
+    }
+
+    async function sendQuestion() {
+      const input = document.getElementById("questionInput");
+      const question = input.value.trim();
+      if (!question) return;
+
+      input.value = "";
+      input.style.height = "auto";
+      appendMessage("q", question);
+      document.getElementById("chatError").textContent = "";
+      showTyping();
+
+      try {
+        const res = await Api.askQuestion(docId, question);
+        hideTyping();
+        appendMessage("a", res.answer);
+      } catch (e) {
+        hideTyping();
+        document.getElementById("chatError").textContent = e.message;
+        showToast("Failed to get answer: " + e.message, "error");
+      }
+    }
+
+    // Auto-resize textarea
+    const questionInput = document.getElementById("questionInput");
+    questionInput.addEventListener("input", function() {
+      this.style.height = "auto";
+      this.style.height = Math.min(this.scrollHeight, 120) + "px";
+    });
+
+    questionInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendQuestion();
+      }
+    });
+
+    loadDoc();
+    loadHistory();
+  </script>
+</body>
+</html>
