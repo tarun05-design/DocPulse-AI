@@ -1,14 +1,32 @@
 # DocPulse AI
 
-> **Intelligent Enterprise Document Understanding, Multimodal OCR, Dense Vector RAG, and Gemini 2.5 Flash AI Reasoning Platform.**
+> **Enterprise Document Intelligence Platform powered by Google Gemini 2.5 Flash, Multimodal OCR, Dense Vector RAG, Flask REST API, PostgreSQL, and Docker Containerization.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python 3.14](https://img.shields.io/badge/Python-3.14-green.svg)](https://www.python.org/)
-[![Flask](https://img.shields.io/badge/Backend-Flask%20REST-black.svg)](https://flask.palletsprojects.com/)
-[![Google Gemini 2.5](https://img.shields.io/badge/AI%20Engine-Gemini%202.5%20Flash-purple.svg)](https://ai.google.dev/)
+[![Docker](https://img.shields.io/badge/Container-Docker%20%26%20Docker%20Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![Python 3.14](https://img.shields.io/badge/Language-Python%203.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Flask REST API](https://img.shields.io/badge/Backend-Flask%20REST%20API-000000?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![Google Gemini 2.5](https://img.shields.io/badge/AI%20Engine-Google%20Gemini%202.5%20Flash-8E44AD?logo=google&logoColor=white)](https://ai.google.dev/)
+[![Vector RAG](https://img.shields.io/badge/Vector%20Search-SentenceTransformers%20RAG-FF6F00?logo=huggingface&logoColor=white)](https://huggingface.co/)
+[![PyTesseract OCR](https://img.shields.io/badge/OCR-PyTesseract%20%26%20TrOCR-009688)](https://github.com/tesseract-ocr/tesseract)
+[![Database](https://img.shields.io/badge/Database-PostgreSQL%20%2F%20SQLite-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Security](https://img.shields.io/badge/Auth-JWT%20%26%20Bcrypt-D32F2F)](https://jwt.io/)
 [![Tests](https://img.shields.io/badge/Tests-41%20Passed-brightgreen.svg)]()
 
 DocPulse AI is a production-grade AI SaaS platform that transforms unstructured documents (**PDF, DOCX, TXT, PNG, JPG, TIFF, BMP**) into actionable intelligence. It orchestrates optical character recognition, spatial layout parsing, 384-dimensional dense vector embeddings, and Google Gemini neural reasoning to generate executive summaries, audit compliance risks, extract named entities, and power context-grounded Q&A chat.
+
+---
+
+### 🛠️ Technology Stack at a Glance
+
+| Category | Technologies & Frameworks |
+|---|---|
+| **DevOps & Infrastructure** | **Docker**, **Docker Compose**, **Nginx Web Server**, Pytest Automation Suite (41 Tests) |
+| **AI & Neural Reasoning** | **Google Gemini 2.5 Flash API**, Smart Local Heuristic NLP Engine |
+| **Multimodal OCR & Layout** | **PyTesseract OCR**, PyPDF/pypdf, `python-docx`, LayoutLMv3, TrOCR |
+| **Vector RAG Engine** | `sentence-transformers/all-MiniLM-L6-v2` (384-dim dense embeddings), Cosine Similarity Retrieval |
+| **Backend & Security** | Python 3.14, **Flask REST API**, SQLAlchemy ORM, JWT Bearer Tokens, Bcrypt Password Hashing |
+| **Database & Cloud Storage** | **PostgreSQL**, SQLite (Development), Azure Blob Storage + Local Filesystem Fallback |
+| **Frontend UI/UX** | Modern Vercel/Linear-inspired Glassmorphism Dark Theme, Vanilla JS (No heavy framework overhead), Dynamic Profile Navigation |
 
 ---
 
