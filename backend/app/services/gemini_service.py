@@ -17,7 +17,7 @@ from flask import current_app
 
 logger = logging.getLogger(__name__)
 
-FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-2.5-flash-lite", "gemini-2.0-flash-lite"]
+FALLBACK_MODELS = ["gemini-flash-latest", "gemini-2.0-flash", "gemini-2.0-flash-lite"]
 
 
 def _get_model(model_name=None):
@@ -27,7 +27,7 @@ def _get_model(model_name=None):
     try:
         import google.generativeai as genai
         genai.configure(api_key=api_key)
-        target = model_name or current_app.config.get("GEMINI_MODEL", "gemini-2.5-flash")
+        target = model_name or current_app.config.get("GEMINI_MODEL", "gemini-flash-latest")
         return genai.GenerativeModel(target)
     except Exception as exc:  # noqa: BLE001
         logger.warning("Failed to initialize GenerativeModel: %s", exc)
@@ -40,7 +40,7 @@ def _generate_content_with_fallback(prompt):
     if model is None:
         raise RuntimeError("GEMINI_API_KEY is not set or is invalid.")
 
-    models_to_try = [current_app.config.get("GEMINI_MODEL", "gemini-2.5-flash")]
+    models_to_try = [current_app.config.get("GEMINI_MODEL", "gemini-flash-latest")]
     for fb in FALLBACK_MODELS:
         if fb not in models_to_try:
             models_to_try.append(fb)
@@ -146,12 +146,10 @@ Document text:
 
 def answer_question(question, context_chunks):
     """RAG-style answer grounded in retrieved chunks."""
-    if _get_model() is None:
-        return _extractive_answer(question, context_chunks)
-
-    context = "\n---\n".join(context_chunks) if context_chunks else "(no relevant context found)"
-
-    prompt = f"""You are a helpful AI document assistant. Answer the user's question clearly, concisely, and neatly using ONLY the provided document excerpts.
+    model = _get_model()
+    if model is not None:
+        context = "\n---\n".join(context_chunks) if context_chunks else "(no relevant context found)"
+        prompt = f"""You are a helpful AI document assistant. Answer the user's question clearly, concisely, and neatly using ONLY the provided document excerpts.
 
 Formatting Guidelines:
 - Use clear bullet points (`•`) and bold key categories/headings (`**Category:**`).
@@ -165,12 +163,20 @@ Document excerpts:
 Question: {question}
 
 Answer:"""
+        try:
+            answer_text = _generate_content_with_fallback(prompt)
+            if answer_text and answer_text.strip():
+                return answer_text.strip()
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Gemini answer_question failed (%s) — falling back to extractive QA", exc)
+
     try:
-        answer_text = _generate_content_with_fallback(prompt)
-        return answer_text.strip()
-    except Exception as exc:  # noqa: BLE001
-        logger.exception("Gemini answer_question failed (%s) — falling back to extractive QA", exc)
         return _extractive_answer(question, context_chunks)
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Extractive QA fallback failed: %s", exc)
+        if context_chunks:
+            return "Based on the document excerpts:\n\n" + "\n".join(f"• {c[:200]}" for c in context_chunks[:3])
+        return "No relevant text was found in the document to answer your question."
 
 
 def _normalize_query(q):
@@ -205,6 +211,7 @@ def _extractive_answer(question, context_chunks):
 
     full_text = "\n".join(context_chunks)
     q_norm = _normalize_query(question)
+    q_lower = q_norm
     q_words = [w for w in re.findall(r"\w+", q_norm) if len(w) > 2]
 
     # 0.3. Project Title / Document Title Queries
@@ -263,30 +270,48 @@ def _extractive_answer(question, context_chunks):
             return "\n".join(res)
 
     # 0. Candidate Name & Identity Queries
-    if any(k in q_lower for k in ["name", "who is the candidate", "candidate", "applicant", "whose resume", "person name"]):
+    if any(k in q_lower for k in ["name", "who is the candidate", "candidate", "applicant", "whose resume", "person name", "who is"]):
         header_text = context_chunks[0] if context_chunks else full_text
         lines = [l.strip() for l in header_text.splitlines() if l.strip()]
         cand_name, cand_title, cand_email = "", "", ""
-        for line in lines[:8]:
+        ignore_words = ["summary", "experience", "education", "skills", "projects", "certifications", "page 1", "curriculum vitae", "resume", "contact", "profile", "about"]
+
+        for line in lines[:10]:
             clean_l = re.sub(r"^[•\-\*\s]+", "", line).strip()
             if not clean_l:
                 continue
+
             if "@" in clean_l and not cand_email:
                 m_email = re.search(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b", clean_l)
                 if m_email:
                     cand_email = m_email.group(0)
-            if not cand_name and len(clean_l) < 60 and not any(k in clean_l.lower() for k in ["http", "@", "certific", "summary", "experience", "skill"]):
-                if "|" in clean_l:
-                    parts = clean_l.split("|")
-                    cand_name = parts[0].strip()
-                    if len(parts) > 1:
+
+            if not cand_name:
+                low_l = clean_l.lower()
+                if any(w in low_l for w in ignore_words) or "@" in clean_l or "http" in clean_l or "github" in clean_l or "linkedin" in clean_l:
+                    continue
+
+                if re.search(r"\d", clean_l):
+                    continue
+
+                name_cand = clean_l
+                if "|" in name_cand:
+                    parts = name_cand.split("|")
+                    name_cand = parts[0].strip()
+                    if len(parts) > 1 and not cand_title:
                         cand_title = parts[1].strip()
-                elif " - " in clean_l:
-                    parts = clean_l.split(" - ", 1)
-                    cand_name = parts[0].strip()
-                    cand_title = parts[1].strip()
-                else:
-                    cand_name = clean_l
+
+                if 2 <= len(name_cand) <= 45 and re.match(r"^[A-Za-z\s\.\,\'\-]+$", name_cand):
+                    cand_name = name_cand.strip()
+
+        if cand_name and not cand_title:
+            for line in lines[:6]:
+                clean_l = line.strip()
+                if clean_l and clean_l != cand_name and not any(k in clean_l.lower() for k in ["@", "http", "github", "linkedin", "summary", "experience"]):
+                    if len(clean_l) < 50 and not re.search(r"\d", clean_l):
+                        cand_title = clean_l
+                        break
+
         if cand_name:
             res = [f"• **Candidate Name:** {cand_name}"]
             if cand_title:
@@ -343,20 +368,33 @@ def _extractive_answer(question, context_chunks):
         lines = []
         for line in full_text.splitlines():
             line_str = line.strip()
-            if any(k in line_str.lower() for k in ["http", "github", "linkedin", "www.", ".com", "@", "mailto", "phone", "+91"]):
+            if not line_str:
+                continue
+            # Skip skill lines like "Tools & Cloud: Git, GitHub..."
+            if "tools & cloud" in line_str.lower() or "languages:" in line_str.lower():
+                continue
+            if any(k in line_str.lower() for k in ["http://", "https://", "github.com", "linkedin.com", "www.", "@", "phone", "+91"]):
                 for segment in line_str.split("|"):
                     seg = segment.strip()
-                    if seg and seg not in lines:
-                        lines.append(seg)
+                    # Clean up broken spaces around hyphens in URLs like github.com/tarun05 -design
+                    seg_clean = re.sub(r"(\w+)\s+-\s*(\w+)", r"\1-\2", seg)
+                    if seg_clean and seg_clean not in lines and any(k in seg_clean.lower() for k in ["http", "github", "linkedin", "www.", "@", ".app", ".com", "+91"]):
+                        lines.append(seg_clean)
         if lines:
             formatted = []
+            seen = set()
             for item in lines[:8]:
+                if item in seen:
+                    continue
+                seen.add(item)
                 if "@" in item:
                     formatted.append(f"• **Email:** {item}")
-                elif "linkedin" in item.lower():
+                elif "linkedin.com" in item.lower():
                     formatted.append(f"• **LinkedIn:** {item}")
-                elif "github" in item.lower():
+                elif "github.com" in item.lower():
                     formatted.append(f"• **GitHub:** {item}")
+                elif "streamlit.app" in item.lower() or "http" in item.lower():
+                    formatted.append(f"• **Live Demo / Web:** {item}")
                 else:
                     formatted.append(f"• {item}")
             return "Found the following contact details & links in the document:\n\n" + "\n".join(formatted)

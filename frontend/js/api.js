@@ -57,7 +57,7 @@ function renderNavbar() {
     const initial = (user.name || user.email || "U").charAt(0).toUpperCase();
     nav.innerHTML = `
       <a href="index.html" class="${currentPath === "index.html" ? "active" : ""}">Home</a>
-      <a href="upload.html" class="${currentPath === "upload.html" ? "active" : ""}">Upload</a>
+      <a href="upload.html" class="${currentPath === "upload.html" ? "active" : ""}">Workspace</a>
       <div class="profile-dropdown-wrap">
         <button class="profile-trigger" id="profileDropdownBtn" aria-label="User profile menu">
           <div class="profile-avatar">${initial}</div>
@@ -70,7 +70,7 @@ function renderNavbar() {
             <div class="email">${user.email || ""}</div>
           </div>
           <a href="dashboard.html">📊 Dashboard</a>
-          <a href="upload.html">📤 Upload Document</a>
+          <a href="upload.html">📂 Workspace</a>
           <button class="logout-item" id="navLogoutBtn">🚪 Log Out</button>
         </div>
       </div>

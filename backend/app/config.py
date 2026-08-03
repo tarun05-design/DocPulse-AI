@@ -26,7 +26,7 @@ class Config:
     )
 
     GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-    GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+    GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
 
     HF_OCR_MODEL = os.environ.get("HF_OCR_MODEL", "microsoft/trocr-base-printed")
     HF_LAYOUT_MODEL = os.environ.get("HF_LAYOUT_MODEL", "microsoft/layoutlmv3-base")

@@ -3,249 +3,425 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="description" content="DocPulse AI — Enterprise Document Intelligence, Multimodal OCR, Dense Vector RAG, and Gemini 2.5 Flash AI Platform" />
-<title>DocPulse AI · Intelligent Document Understanding Platform</title>
+<meta name="description" content="DocPulse AI — Upload any document and let AI read, understand, and answer your questions." />
+<title>DocPulse AI · Understand Your Documents with AI</title>
 <link rel="stylesheet" href="css/style.css" />
+<style>
+  /* ─── Landing Page Styles ─── */
+
+  .landing-hero {
+    min-height: calc(100vh - 72px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 24px 80px;
+    position: relative;
+  }
+
+  /* Ambient background glow */
+  .landing-hero::before {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, rgba(6, 182, 212, 0.04) 40%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .landing-hero > * { position: relative; z-index: 1; }
+
+  .hero-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #a5b4fc;
+    margin-bottom: 28px;
+    letter-spacing: 0.02em;
+  }
+  .hero-chip svg { width: 14px; height: 14px; stroke: var(--accent-indigo); }
+
+  .hero-title {
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    font-weight: 800;
+    line-height: 1.15;
+    color: var(--text-primary);
+    max-width: 780px;
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+  }
+  .hero-title .accent {
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-desc {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    max-width: 540px;
+    line-height: 1.65;
+    margin-bottom: 40px;
+  }
+
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn-hero {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 30px;
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.25s var(--ease-spring);
+    cursor: pointer;
+    border: none;
+  }
+  .btn-hero.primary {
+    background: var(--gradient-brand);
+    color: #fff;
+    box-shadow: 0 4px 24px rgba(99, 102, 241, 0.3), 0 0 0 1px rgba(99, 102, 241, 0.3);
+  }
+  .btn-hero.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4), 0 0 0 1px rgba(99, 102, 241, 0.4);
+  }
+  .btn-hero.primary svg { width: 18px; height: 18px; stroke: #fff; }
+
+  .btn-hero.secondary {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    box-shadow: none;
+  }
+  .btn-hero.secondary:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+  }
+  .btn-hero.secondary svg { width: 16px; height: 16px; stroke: currentColor; }
+
+  /* Trusted by strip */
+  .trust-strip {
+    margin-top: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .trust-strip .label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+  }
+  .trust-logos {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .trust-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.35);
+  }
+  .trust-logo svg { width: 18px; height: 18px; stroke: currentColor; opacity: 0.7; }
+
+  /* ─── Features Section ─── */
+  .features-section {
+    padding: 80px 24px 100px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .features-section .section-label {
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent-indigo);
+    margin-bottom: 12px;
+  }
+  .features-section .section-title {
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+  }
+  .features-section .section-desc {
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    max-width: 520px;
+    margin: 0 auto 48px;
+    line-height: 1.6;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 800px) {
+    .features-grid { grid-template-columns: 1fr; }
+  }
+
+  .feature-card {
+    padding: 32px 28px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  }
+  .feature-card:hover {
+    border-color: var(--border-hover);
+    background: rgba(255, 255, 255, 0.03);
+    transform: translateY(-3px);
+  }
+
+  .feature-card .fc-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+  }
+  .feature-card .fc-icon svg { width: 22px; height: 22px; }
+  .feature-card .fc-icon.indigo  { background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); }
+  .feature-card .fc-icon.indigo svg { stroke: var(--accent-indigo); }
+  .feature-card .fc-icon.cyan    { background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.2); }
+  .feature-card .fc-icon.cyan svg { stroke: var(--accent-cyan); }
+  .feature-card .fc-icon.emerald { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); }
+  .feature-card .fc-icon.emerald svg { stroke: var(--accent-emerald); }
+  .feature-card .fc-icon.rose    { background: rgba(244, 63, 94, 0.1); border: 1px solid rgba(244, 63, 94, 0.2); }
+  .feature-card .fc-icon.rose svg { stroke: var(--accent-rose); }
+  .feature-card .fc-icon.amber   { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); }
+  .feature-card .fc-icon.amber svg { stroke: #f59e0b; }
+  .feature-card .fc-icon.purple  { background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.2); }
+  .feature-card .fc-icon.purple svg { stroke: #a855f7; }
+
+  .feature-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
+  .feature-card p {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* ─── Bottom CTA ─── */
+  .bottom-cta {
+    max-width: 700px;
+    margin: 0 auto 100px;
+    text-align: center;
+    padding: 56px 40px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    position: relative;
+    overflow: hidden;
+  }
+  .bottom-cta::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent);
+  }
+  .bottom-cta h2 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+  }
+  .bottom-cta p {
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+    line-height: 1.6;
+    max-width: 440px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .bottom-cta .btn-hero { margin: 0 auto; }
+
+  @media (max-width: 600px) {
+    .hero-title { font-size: 2rem; }
+    .hero-desc { font-size: 0.95rem; }
+    .hero-actions { flex-direction: column; width: 100%; }
+    .btn-hero { width: 100%; justify-content: center; }
+  }
+</style>
 </head>
 <body>
-
-  <!-- Topbar Navigation -->
   <div class="topbar">
-    <a href="index.html" class="brand">
-      <div class="dot-logo"></div>DocPulse AI
-    </a>
+    <a href="index.html" class="brand"><div class="dot-logo"></div>DocPulse AI</a>
     <nav></nav>
   </div>
 
-  <div class="container">
-
-    <!-- Hero Section -->
-    <section class="hero-wrapper">
-      <div class="hero-pill-badge">
-        <span>⚡ Powered by Gemini 2.5 Flash & Multimodal RAG Engine</span>
-      </div>
-
-      <h1 class="hero-main-title">
-        Transform Unstructured Documents into Live AI Intelligence
-      </h1>
-
-      <p class="hero-sub-text">
-        DocPulse AI orchestrates optical character recognition, spatial layout parsing, 
-        dense vector embeddings, and Google Gemini neural reasoning to summarize, audit compliance risks, 
-        and chat with your enterprise documents.
-      </p>
-
-      <div class="hero-cta-group">
-        <a href="upload.html" class="btn">🚀 Upload Document</a>
-        <a href="dashboard.html" class="btn secondary">📊 View Analytics Dashboard</a>
-      </div>
-
-      <!-- Hero Live Product Mockup -->
-      <div class="hero-mockup-frame">
-        <div class="mockup-header">
-          <div class="mockup-dots">
-            <div class="mockup-dot red"></div>
-            <div class="mockup-dot yellow"></div>
-            <div class="mockup-dot green"></div>
-          </div>
-          <div class="mockup-title">docpulse.ai/workspace/AI_Time_Machine_Doc.pdf</div>
-          <div style="font-size:0.75rem;color:var(--accent-emerald);font-weight:600;">● LIVE AI PIPELINE</div>
-        </div>
-
-        <div class="mockup-body">
-          <!-- Sidebar Info -->
-          <div class="mockup-sidebar">
-            <div style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin-bottom:8px;">
-              📄 AI_Time_Machine_Doc.pdf
-            </div>
-            <div style="display:flex;gap:6px;margin-bottom:16px;">
-              <span class="badge">Report</span>
-              <span class="badge processed">Processed</span>
-            </div>
-
-            <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">
-              📝 Executive AI Summary
-            </div>
-            <div style="font-size:0.84rem;color:var(--text-secondary);line-height:1.5;margin-bottom:14px;background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;border:1px solid var(--border);">
-              AI Time Machine is an end-to-end computer vision & image restoration framework. It features PyTorch, OpenCV, face enhancement algorithms, and automated image colorization.
-            </div>
-
-            <div style="font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;">
-              🏷️ Extracted Entities
-            </div>
-            <div style="display:flex;flex-wrap:wrap;gap:4px;">
-              <span class="badge" style="color:var(--accent-indigo);">Framework: PyTorch</span>
-              <span class="badge" style="color:var(--accent-emerald);">Module: OpenCV</span>
-              <span class="badge" style="color:var(--accent-cyan);">Task: Colorization</span>
-            </div>
-          </div>
-
-          <!-- Chat Window Simulator -->
-          <div class="mockup-chat">
-            <div style="display:flex;flex-direction:column;gap:12px;">
-              <div class="msg q" style="align-self:flex-end;background:var(--gradient-brand);color:#fff;padding:10px 14px;border-radius:12px;font-size:0.88rem;">
-                What is the project title and core tech stack?
-              </div>
-              <div class="msg a" style="align-self:flex-start;background:var(--panel-solid);border:1px solid var(--border-hover);padding:12px 16px;border-radius:12px;font-size:0.88rem;color:var(--text-primary);line-height:1.5;">
-                <div style="font-weight:700;color:var(--accent-cyan);margin-bottom:4px;">🤖 Gemini 2.5 Flash Response:</div>
-                • <strong>Project Title:</strong> AI Time Machine<br/>
-                • <strong>Tagline:</strong> Travel Through History with a Single Photograph<br/>
-                • <strong>Tech Stack:</strong> Python, PyTorch, OpenCV, Flask REST Services & Vector RAG
-              </div>
-            </div>
-
-            <div style="margin-top:16px;display:flex;gap:8px;align-items:center;background:rgba(255,255,255,0.03);border:1px solid var(--border);padding:8px 12px;border-radius:8px;">
-              <span style="color:var(--text-muted);font-size:0.88rem;">Ask a question about this document...</span>
-              <button class="btn" style="margin-left:auto;padding:6px 14px;font-size:0.8rem;height:auto;">Send ↵</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Animated Statistics Strip -->
-    <section class="stats-strip">
-      <div class="stat-item">
-        <div class="value">99.4%</div>
-        <div class="desc">OCR & Table Precision</div>
-      </div>
-      <div class="stat-item">
-        <div class="value">&lt; 800ms</div>
-        <div class="desc">Vector Search Latency</div>
-      </div>
-      <div class="stat-item">
-        <div class="value">100k+</div>
-        <div class="desc">Pages Parsed Capacity</div>
-      </div>
-      <div class="stat-item">
-        <div class="value">0%</div>
-        <div class="desc">Data Retention Risk</div>
-      </div>
-    </section>
-
-    <!-- Technology Logos Strip -->
-    <section class="logos-strip">
-      <div class="title">Engineered with Production-Grade AI Stack</div>
-      <div class="logos-flex">
-        <div class="logo-badge">🤖 Google Gemini 2.5 Flash</div>
-        <div class="logo-badge">👁️ PyTesseract OCR</div>
-        <div class="logo-badge">📐 LayoutLMv3 Spatial</div>
-        <div class="logo-badge">⚡ SentenceTransformers</div>
-        <div class="logo-badge">🐍 Flask Python Backend</div>
-        <div class="logo-badge">🛢️ SQLite / PostgreSQL</div>
-      </div>
-    </section>
-
-    <!-- 4-Step Pipeline Workflow Section -->
-    <section style="margin-bottom: 90px;">
-      <div class="section-heading">
-        <h2>End-to-End AI Document Pipeline</h2>
-        <p>From raw file upload to neural reasoning in four automated steps</p>
-      </div>
-
-      <div class="steps-pipeline-grid">
-        <!-- Step 1 -->
-        <div class="pipeline-card">
-          <div class="pipeline-step-num">Step 01</div>
-          <h3>Multi-Format Ingestion</h3>
-          <p>
-            Drag & drop PDF, DOCX, TXT, PNG, JPG, or TIFF files up to 25 MB. 
-            DocPulse validates file integrity and queues asynchronous background tasks.
-          </p>
-          <span class="pipeline-tag">Multi-Format Ingest</span>
-        </div>
-
-        <!-- Step 2 -->
-        <div class="pipeline-card">
-          <div class="pipeline-step-num">Step 02</div>
-          <h3>OCR & Spatial Layout</h3>
-          <p>
-            Applies Tesseract OCR to extract image text and LayoutLM spatial analysis 
-            to preserve headers, bullet structures, and tabular data format.
-          </p>
-          <span class="pipeline-tag">Multimodal Spatial OCR</span>
-        </div>
-
-        <!-- Step 3 -->
-        <div class="pipeline-card">
-          <div class="pipeline-step-num">Step 03</div>
-          <h3>Vector RAG Indexing</h3>
-          <p>
-            Segments text into overlapping semantic chunks, computes 384-dim dense embeddings 
-            with `all-MiniLM-L6-v2`, and enables sub-second cosine search.
-          </p>
-          <span class="pipeline-tag">Dense Embeddings</span>
-        </div>
-
-        <!-- Step 4 -->
-        <div class="pipeline-card">
-          <div class="pipeline-step-num">Step 04</div>
-          <h3>Gemini AI Reasoning</h3>
-          <p>
-            Generates 2-paragraph summaries, identifies red-flag compliance risks, extracts concrete 
-            action items, and powers grounded Q&A chat.
-          </p>
-          <span class="pipeline-tag">Gemini 2.5 Flash</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- SaaS Feature Showcase Grid -->
-    <section style="margin-bottom: 90px;">
-      <div class="section-heading">
-        <h2>Built for Enterprise Document Intelligence</h2>
-        <p>Comprehensive capabilities designed for speed, security, and precision</p>
-      </div>
-
-      <div class="features-cards-grid">
-        <div class="feature-box">
-          <div class="icon-wrap">📝</div>
-          <h3>Automated Plain Summaries</h3>
-          <p>Get instant multi-paragraph executive summaries highlighting core findings, project titles, and target objectives without opening long files.</p>
-        </div>
-
-        <div class="feature-box">
-          <div class="icon-wrap">⚠️</div>
-          <h3>Compliance Risk Auditing</h3>
-          <p>Automatically flags missing clauses, legal liabilities, payment ambiguities, and security compliance risks across your contracts.</p>
-        </div>
-
-        <div class="feature-box">
-          <div class="icon-wrap">💬</div>
-          <h3>Grounded Context Q&A Chat</h3>
-          <p>Ask natural questions about any document. Gemini AI synthesizes answers strictly grounded in document excerpts with bulleted citations.</p>
-        </div>
-
-        <div class="feature-box">
-          <div class="icon-wrap">🏷️</div>
-          <h3>Named Entity Chip Extraction</h3>
-          <p>Extract dates, monetary amounts, organization names, legal clauses, and author tags into structured, filterable metadata chips.</p>
-        </div>
-
-        <div class="feature-box">
-          <div class="icon-wrap">⚡</div>
-          <h3>Hybrid Offline/Cloud Fallback</h3>
-          <p>Runs 100% locally when offline using smart heuristic analyzers or supercharged with Google Gemini 2.5 Flash when connected.</p>
-        </div>
-
-        <div class="feature-box">
-          <div class="icon-wrap">🔒</div>
-          <h3>User-Isolated Security</h3>
-          <p>Bcrypt password hashing, JWT authentication tokens, and per-user database row isolation guarantee complete data privacy.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Glowing Call to Action Banner -->
-    <div class="cta-glow-banner">
-      <h2>Ready to Supercharge Your Document Workflow?</h2>
-      <p>Upload your first contract, invoice, technical report, or resume and experience live AI intelligence in seconds.</p>
-      <a href="upload.html" class="btn" style="padding:14px 32px;font-size:1.05rem;">🚀 Launch DocPulse Workspace</a>
+  <!-- Hero Section -->
+  <section class="landing-hero">
+    <div class="hero-chip">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" /></svg>
+      Powered by Google Gemini AI
     </div>
 
-  </div>
+    <h1 class="hero-title">
+      Read any document.<br/><span class="accent">Understand it instantly.</span>
+    </h1>
 
-  <!-- Site Footer -->
+    <p class="hero-desc">
+      Upload a PDF, image, or document — DocPulse extracts the text, analyzes the content, and lets you chat with it using AI.
+    </p>
+
+    <div class="hero-actions">
+      <a href="upload.html" class="btn-hero primary" id="ctaWorkspace">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" /></svg>
+        Get Started
+      </a>
+      <a href="login.html" class="btn-hero secondary" id="ctaSignIn">
+        <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" /></svg>
+        Sign In
+      </a>
+    </div>
+
+    <div class="trust-strip">
+      <div class="label">Built with</div>
+      <div class="trust-logos">
+        <div class="trust-logo">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" /></svg>
+          Gemini 2.5 Flash
+        </div>
+        <div class="trust-logo">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+          Tesseract OCR
+        </div>
+        <div class="trust-logo">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" /></svg>
+          Flask + Python
+        </div>
+        <div class="trust-logo">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 3.75c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" /></svg>
+          Vector Search
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features-section">
+    <div class="section-label">What DocPulse does</div>
+    <h2 class="section-title">Simple tools for complex documents</h2>
+    <p class="section-desc">
+      Stop manually reading long files. Let AI extract what matters and give you answers in seconds.
+    </p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="fc-icon indigo">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+        </div>
+        <h3>Extract text from anything</h3>
+        <p>Upload PDFs, scanned images, Word docs, or plain text. DocPulse reads them all and pulls out every word.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="fc-icon cyan">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" /></svg>
+        </div>
+        <h3>Chat with your documents</h3>
+        <p>Ask questions in plain English. Get precise answers grounded in the actual content of your files — no hallucination.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="fc-icon emerald">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" /></svg>
+        </div>
+        <h3>AI-powered summaries</h3>
+        <p>Get instant executive summaries, key findings, and action items — without reading a single page yourself.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="fc-icon amber">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>
+        </div>
+        <h3>Spot risks automatically</h3>
+        <p>Compliance gaps, missing clauses, and red flags — identified and highlighted before they become problems.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="fc-icon purple">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" /><path d="M6 6h.008v.008H6V6Z" /></svg>
+        </div>
+        <h3>Smart entity extraction</h3>
+        <p>Dates, names, amounts, organizations — automatically pulled out and organized into structured metadata.</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="fc-icon rose">
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" /></svg>
+        </div>
+        <h3>Private & secure</h3>
+        <p>Your documents stay yours. Encrypted storage, isolated accounts, and no data shared with third parties.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bottom CTA -->
+  <section class="bottom-cta">
+    <h2>Ready to try it?</h2>
+    <p>Upload your first document and see what DocPulse AI can find in it. It takes less than a minute.</p>
+    <a href="upload.html" class="btn-hero primary">
+      <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" /></svg>
+      Open Workspace
+    </a>
+  </section>
+
+  <!-- Footer -->
   <footer class="site-footer">
     <div class="footer-inner">
       <div class="brand-signature">
@@ -254,12 +430,25 @@
       </div>
       <div style="display:flex;gap:20px;">
         <a href="index.html">Home</a>
-        <a href="upload.html">Upload</a>
+        <a href="upload.html">Workspace</a>
         <a href="dashboard.html">Dashboard</a>
       </div>
     </div>
   </footer>
 
-  <script src="js/api.js"></script>
+  <script src="js/api.js?v=2"></script>
+  <script>
+    // If already logged in, change "Sign In" to "Go to Workspace"
+    if (getToken()) {
+      const signInBtn = document.getElementById("ctaSignIn");
+      if (signInBtn) {
+        signInBtn.href = "upload.html";
+        signInBtn.innerHTML = `
+          <svg fill="none" viewBox="0 0 24 24" stroke-width="2" width="16" height="16"><path d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+          Go to Workspace
+        `;
+      }
+    }
+  </script>
 </body>
 </html>

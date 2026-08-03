@@ -63,16 +63,17 @@
       </div>
       <div style="display:flex;gap:20px;">
         <a href="index.html">Home</a>
-        <a href="upload.html">Upload</a>
+        <a href="upload.html">Workspace</a>
         <a href="dashboard.html">Dashboard</a>
       </div>
     </div>
   </footer>
 
-  <script src="js/api.js"></script>
+  <script src="js/api.js?v=2"></script>
   <script>
     requireAuth();
-    document.getElementById("logoutLink").addEventListener("click", confirmLogout);
+    const logoutBtn = document.getElementById("logoutLink");
+    if (logoutBtn) logoutBtn.addEventListener("click", confirmLogout);
 
     // Greeting
     const user = getUser();

@@ -4,8 +4,589 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="description" content="Upload and manage your documents in DocPulse AI" />
-<title>DocPulse AI · Upload</title>
+<title>DocPulse AI · Workspace</title>
 <link rel="stylesheet" href="css/style.css" />
+<style>
+  /* ─── Upload Page Specific Styles ─── */
+
+  /* SVG icon helper */
+  .icon-svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .icon-svg.sm { width: 16px; height: 16px; }
+  .icon-svg.lg { width: 28px; height: 28px; }
+  .icon-svg.xl { width: 40px; height: 40px; }
+
+  /* Upload section two-column layout */
+  .upload-layout {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 24px;
+    align-items: stretch;
+  }
+  @media (max-width: 900px) {
+    .upload-layout { grid-template-columns: 1fr; }
+  }
+
+  /* Upload card left side */
+  .upload-card-main {
+    background: var(--panel);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .upload-card-main::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+    opacity: 0.6;
+  }
+
+  /* Dropzone redesign */
+  .upload-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 32px;
+    border: 2px dashed rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.03) 0%, rgba(6, 182, 212, 0.02) 100%);
+    cursor: pointer;
+    transition: all 0.35s var(--ease-spring);
+    text-align: center;
+    position: relative;
+  }
+  .upload-dropzone:hover {
+    border-color: rgba(99, 102, 241, 0.4);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.06) 0%, rgba(6, 182, 212, 0.04) 100%);
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.1), inset 0 0 40px rgba(99, 102, 241, 0.03);
+  }
+  .upload-dropzone.drag-over {
+    border-color: var(--accent-cyan);
+    background: rgba(6, 182, 212, 0.06);
+    box-shadow: 0 0 50px rgba(6, 182, 212, 0.2);
+    transform: scale(1.01);
+  }
+
+  .upload-icon-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    transition: all 0.35s var(--ease-spring);
+  }
+  .upload-icon-wrap svg {
+    width: 32px; height: 32px;
+    stroke: var(--accent-indigo);
+    transition: transform 0.35s var(--ease-spring);
+  }
+  .upload-dropzone:hover .upload-icon-wrap {
+    background: rgba(99, 102, 241, 0.18);
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: 0 0 24px rgba(99, 102, 241, 0.2);
+  }
+  .upload-dropzone:hover .upload-icon-wrap svg {
+    transform: translateY(-3px);
+  }
+  .upload-dropzone.drag-over .upload-icon-wrap {
+    background: rgba(6, 182, 212, 0.18);
+    border-color: rgba(6, 182, 212, 0.4);
+    box-shadow: 0 0 24px rgba(6, 182, 212, 0.25);
+  }
+  .upload-dropzone.drag-over .upload-icon-wrap svg {
+    stroke: var(--accent-cyan);
+    transform: translateY(-5px) scale(1.05);
+  }
+
+  .upload-dropzone .dz-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+  }
+  .upload-dropzone .dz-title .browse-link {
+    color: var(--accent-indigo);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: rgba(99, 102, 241, 0.4);
+  }
+  .upload-dropzone .dz-sub {
+    font-size: 0.84rem;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    max-width: 400px;
+    line-height: 1.55;
+  }
+
+  .format-tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+  .format-tag {
+    padding: 3px 10px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+  }
+
+  /* File selected preview */
+  .selected-file-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-top: 16px;
+    animation: scaleIn 0.25s var(--ease-spring);
+  }
+  .selected-file-bar .sf-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .selected-file-bar .sf-icon svg {
+    width: 18px; height: 18px;
+    stroke: var(--accent-indigo);
+  }
+  .selected-file-bar .sf-details {
+    flex: 1;
+    min-width: 0;
+  }
+  .selected-file-bar .sf-name {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .selected-file-bar .sf-size {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+  .selected-file-bar .sf-remove {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    box-shadow: none;
+    transition: all 0.15s ease;
+  }
+  .selected-file-bar .sf-remove:hover {
+    background: rgba(244, 63, 94, 0.12);
+    color: var(--accent-rose);
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Upload status box */
+  .upload-status-box {
+    margin-top: 16px;
+    padding: 16px;
+    border-radius: var(--radius-sm);
+    animation: scaleIn 0.25s var(--ease-spring);
+  }
+  .upload-status-box.uploading {
+    background: rgba(99, 102, 241, 0.06);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+  }
+  .upload-status-box.success {
+    background: rgba(16, 185, 129, 0.06);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+  }
+  .upload-status-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .upload-status-row .status-text {
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+  .upload-status-row .status-sub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* Info sidebar card */
+  .info-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    height: 100%;
+  }
+  .info-card {
+    background: var(--panel);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .info-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.12), transparent);
+    opacity: 0.6;
+  }
+  .info-card h3 {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .info-card h3 svg { stroke: var(--accent-indigo); }
+
+  .pipeline-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    flex: 1;
+    justify-content: space-between;
+  }
+  .pipeline-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    position: relative;
+    padding-bottom: 28px;
+  }
+  .pipeline-step:last-child { padding-bottom: 0; }
+  .pipeline-step::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 32px;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+  .pipeline-step:last-child::before { display: none; }
+
+  .step-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--accent-indigo);
+    z-index: 1;
+  }
+  .step-content .step-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+  .step-content .step-desc {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+
+
+  /* ─── Document List Section ─── */
+  .doc-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .doc-section-header .dsh-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .doc-section-header h2 {
+    margin: 0;
+    font-size: 1.15rem;
+  }
+  .doc-count-chip {
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+  }
+
+  .doc-section-header .dsh-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .search-input-wrap {
+    position: relative;
+  }
+  .search-input-wrap svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px; height: 15px;
+    stroke: var(--text-muted);
+    pointer-events: none;
+  }
+  .search-input-wrap input {
+    padding: 9px 14px 9px 36px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+    font-size: 0.84rem;
+    width: 220px;
+    margin: 0;
+    transition: all 0.15s ease;
+  }
+  .search-input-wrap input:focus {
+    border-color: var(--accent-indigo);
+    width: 280px;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  }
+
+  .refresh-btn {
+    width: 36px; height: 36px;
+    padding: 0;
+    border-radius: var(--radius-xs);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: none;
+    transition: all 0.15s ease;
+  }
+  .refresh-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--border-hover);
+    color: var(--text-primary);
+    transform: none;
+    box-shadow: none;
+  }
+  .refresh-btn svg { width: 16px; height: 16px; stroke: currentColor; }
+
+  /* Document cards list */
+  .doc-cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .doc-card-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+  }
+  .doc-card-row:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--border-hover);
+  }
+
+  .doc-card-row .dcr-file {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+  .dcr-file-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .dcr-file-icon.pdf  { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+  .dcr-file-icon.docx { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
+  .dcr-file-icon.txt  { background: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.2); }
+  .dcr-file-icon.img  { background: rgba(168, 85, 247, 0.1); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.2); }
+
+  .dcr-file-info { min-width: 0; }
+  .dcr-file-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+  .dcr-file-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.76rem;
+    color: var(--text-muted);
+  }
+  .dcr-file-meta .sep {
+    width: 3px; height: 3px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    opacity: 0.5;
+  }
+
+  .doc-card-row .dcr-status { min-width: 100px; }
+
+  .doc-card-row .dcr-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .action-btn {
+    width: 32px; height: 32px;
+    padding: 0;
+    border-radius: 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+    transition: all 0.15s ease;
+  }
+  .action-btn svg {
+    width: 15px; height: 15px;
+    stroke: currentColor;
+  }
+  .action-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--border);
+    color: var(--text-primary);
+    transform: none;
+    box-shadow: none;
+  }
+  .action-btn.danger:hover {
+    background: rgba(244, 63, 94, 0.1);
+    border-color: rgba(244, 63, 94, 0.2);
+    color: var(--accent-rose);
+  }
+
+  .chat-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent-indigo);
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: var(--radius-xs);
+    text-decoration: none;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .chat-link:hover {
+    background: rgba(99, 102, 241, 0.14);
+    border-color: rgba(99, 102, 241, 0.35);
+    color: #a5b4fc;
+    opacity: 1;
+  }
+  .chat-link svg { width: 13px; height: 13px; stroke: currentColor; }
+
+  /* Empty state */
+  .empty-block {
+    padding: 56px 24px;
+    text-align: center;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-md);
+  }
+  .empty-block .eb-icon {
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+  }
+  .empty-block .eb-icon svg { width: 24px; height: 24px; stroke: var(--accent-indigo); }
+  .empty-block h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+  }
+  .empty-block p {
+    font-size: 0.84rem;
+    color: var(--text-muted);
+    max-width: 360px;
+    margin: 0 auto;
+    line-height: 1.55;
+  }
+
+  @media (max-width: 700px) {
+    .doc-card-row { grid-template-columns: 1fr; gap: 12px; }
+    .doc-section-header { flex-direction: column; align-items: flex-start; }
+    .search-input-wrap input { width: 100%; }
+    .search-input-wrap input:focus { width: 100%; }
+  }
+</style>
 </head>
 <body>
   <div class="topbar">
@@ -14,34 +595,119 @@
   </div>
 
   <div class="container">
-    <!-- Upload Section -->
-    <div class="card">
-      <h1>Upload a document</h1>
-      <p class="muted" style="margin-bottom:20px;font-size:0.88rem;">PDF, DOCX, TXT, PNG, JPG, TIFF or BMP · up to 25 MB</p>
 
-      <div class="dropzone" id="dropzone">
-        <span class="icon">📄</span>
-        <p>Drag & drop a file here, or <strong style="color:var(--accent);">browse</strong></p>
-        <p class="subtext">Your document will be processed automatically with OCR + AI analysis</p>
-        <input type="file" id="fileInput" style="display:none" accept=".pdf,.png,.jpg,.jpeg,.tiff,.bmp,.docx,.txt" />
+    <!-- Upload Area: Two-column layout -->
+    <div class="upload-layout">
+
+      <!-- Left: Main Upload Card -->
+      <div class="upload-card-main">
+        <h1 style="font-size:1.4rem;margin-bottom:6px;">Upload Document</h1>
+        <p class="muted" style="font-size:0.86rem;margin-bottom:24px;">
+          Drop a file to extract text, analyze structure, and enable AI chat.
+        </p>
+
+        <div class="upload-dropzone" id="dropzone">
+          <div class="upload-icon-wrap">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5">
+              <path d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13" />
+            </svg>
+          </div>
+          <div class="dz-title">
+            Drag & drop your file here, or <span class="browse-link">browse</span>
+          </div>
+          <div class="dz-sub">
+            Your document will be automatically processed with OCR, AI analysis, and vector search indexing. Max 25 MB per file.
+          </div>
+          <div class="format-tags">
+            <span class="format-tag">PDF</span>
+            <span class="format-tag">DOCX</span>
+            <span class="format-tag">TXT</span>
+            <span class="format-tag">PNG</span>
+            <span class="format-tag">JPG</span>
+            <span class="format-tag">TIFF</span>
+            <span class="format-tag">BMP</span>
+          </div>
+          <input type="file" id="fileInput" style="display:none" accept=".pdf,.png,.jpg,.jpeg,.tiff,.bmp,.docx,.txt" />
+        </div>
+
         <div id="filePreview"></div>
+        <div id="uploadError" class="error" style="margin-top:12px;"></div>
+        <div id="uploadStatus"></div>
       </div>
 
-      <div class="error" id="uploadError" style="margin-top:12px;"></div>
-      <div id="uploadStatus" style="margin-top:12px;"></div>
+      <!-- Right: Info Sidebar -->
+      <div class="info-sidebar">
+
+        <!-- Pipeline Steps -->
+        <div class="info-card">
+          <h3>
+            <svg class="icon-svg sm" fill="none" viewBox="0 0 24 24" stroke-width="2"><path d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" /></svg>
+            How it works
+          </h3>
+          <div class="pipeline-steps">
+            <div class="pipeline-step">
+              <div class="step-dot">1</div>
+              <div class="step-content">
+                <div class="step-title">Text Extraction</div>
+                <div class="step-desc">PyPDF digital layer parsing, PyTesseract OCR for scanned images, python-docx for Word files</div>
+              </div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-dot">2</div>
+              <div class="step-content">
+                <div class="step-title">Layout & Entity Analysis</div>
+                <div class="step-desc">LayoutLMv3 spatial parsing with named entity extraction for dates, amounts, organizations</div>
+              </div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-dot">3</div>
+              <div class="step-content">
+                <div class="step-title">Gemini AI Reasoning</div>
+                <div class="step-desc">Executive summary, compliance risk audit, action items, and document classification</div>
+              </div>
+            </div>
+            <div class="pipeline-step">
+              <div class="step-dot">4</div>
+              <div class="step-content">
+                <div class="step-title">Vector RAG Indexing</div>
+                <div class="step-desc">384-dim dense embeddings via MiniLM-L6-v2 for context-grounded Q&A chat</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+      </div>
     </div>
 
-    <!-- Documents List -->
-    <div class="card">
-      <h2>Your documents</h2>
+    <!-- Documents Section -->
+    <div class="card" style="margin-top:24px;">
+      <div class="doc-section-header">
+        <div class="dsh-left">
+          <h2>Your Documents</h2>
+          <span class="doc-count-chip" id="docCountChip">0</span>
+        </div>
+        <div class="dsh-right">
+          <div class="search-input-wrap">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" id="docSearchInput" placeholder="Search documents..." />
+          </div>
+          <button class="refresh-btn" id="refreshBtn" title="Refresh">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182" /></svg>
+          </button>
+        </div>
+      </div>
+
       <div id="docContent">
-        <div class="page-loader" id="docLoader">
+        <div class="page-loader">
           <div class="spinner-ring"></div>
-          Loading documents…
+          <span>Loading documents…</span>
         </div>
       </div>
     </div>
-  <!-- Site Footer -->
+  </div>
+
+  <!-- Footer -->
   <footer class="site-footer">
     <div class="footer-inner">
       <div class="brand-signature">
@@ -50,114 +716,244 @@
       </div>
       <div style="display:flex;gap:20px;">
         <a href="index.html">Home</a>
-        <a href="upload.html">Upload</a>
+        <a href="upload.html">Workspace</a>
         <a href="dashboard.html">Dashboard</a>
       </div>
     </div>
   </footer>
 
-  <script src="js/api.js"></script>
+  <script src="js/api.js?v=2"></script>
   <script>
     requireAuth();
-    document.getElementById("logoutLink").addEventListener("click", confirmLogout);
 
-    // ─── Dropzone logic ───
     const dropzone = document.getElementById("dropzone");
     const fileInput = document.getElementById("fileInput");
-    let selectedFile = null;
+    const searchInput = document.getElementById("docSearchInput");
+    const refreshBtn = document.getElementById("refreshBtn");
 
+    let allDocsCache = [];
+    let pollTimer = null;
+
+    // ─── Dropzone Events ───
     dropzone.addEventListener("click", (e) => {
-      if (e.target.closest(".file-preview")) return;
+      if (e.target.closest(".selected-file-bar")) return;
+      fileInput.value = "";
       fileInput.click();
     });
 
     dropzone.addEventListener("dragover", (e) => {
       e.preventDefault();
-      dropzone.classList.add("drag");
+      e.stopPropagation();
+      dropzone.classList.add("drag-over");
     });
 
-    dropzone.addEventListener("dragleave", () => dropzone.classList.remove("drag"));
+    dropzone.addEventListener("dragleave", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dropzone.classList.remove("drag-over");
+    });
 
     dropzone.addEventListener("drop", (e) => {
       e.preventDefault();
-      dropzone.classList.remove("drag");
-      if (e.dataTransfer.files.length) {
-        selectedFile = e.dataTransfer.files[0];
-        showFilePreview(selectedFile);
-        handleUpload(selectedFile);
+      e.stopPropagation();
+      dropzone.classList.remove("drag-over");
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        showFilePreview(e.dataTransfer.files[0]);
+        handleUpload(e.dataTransfer.files[0]);
       }
     });
 
     fileInput.addEventListener("change", () => {
-      if (fileInput.files.length) {
-        selectedFile = fileInput.files[0];
-        showFilePreview(selectedFile);
-        handleUpload(selectedFile);
+      if (fileInput.files && fileInput.files.length > 0) {
+        showFilePreview(fileInput.files[0]);
+        handleUpload(fileInput.files[0]);
       }
     });
 
+    // ─── File Preview ───
     function showFilePreview(file) {
       const preview = document.getElementById("filePreview");
-      const ext = file.name.split('.').pop().toLowerCase();
-      const icons = { pdf: '📕', docx: '📘', txt: '📝', png: '🖼️', jpg: '🖼️', jpeg: '🖼️', tiff: '🖼️', bmp: '🖼️' };
       preview.innerHTML = `
-        <div class="file-preview">
-          <span class="file-icon">${icons[ext] || '📄'}</span>
-          <div class="file-info">
-            <div class="file-name">${file.name}</div>
-            <div class="file-size">${formatFileSize(file.size)}</div>
+        <div class="selected-file-bar">
+          <div class="sf-icon">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
           </div>
+          <div class="sf-details">
+            <div class="sf-name">${esc(file.name)}</div>
+            <div class="sf-size">${formatFileSize(file.size)}</div>
+          </div>
+          <button class="sf-remove" onclick="clearPreview(event)" title="Remove">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 18 18 6M6 6l12 12"/></svg>
+          </button>
         </div>
       `;
     }
 
-    let pollTimer = null;
+    function clearPreview(e) {
+      if (e) e.stopPropagation();
+      document.getElementById("filePreview").innerHTML = "";
+      document.getElementById("uploadStatus").innerHTML = "";
+      document.getElementById("uploadError").textContent = "";
+      fileInput.value = "";
+    }
 
+    // ─── Upload Handler ───
     async function handleUpload(file) {
       const errBox = document.getElementById("uploadError");
       const statusBox = document.getElementById("uploadStatus");
       errBox.textContent = "";
+
       statusBox.innerHTML = `
-        <div style="display:flex;align-items:center;gap:10px;color:var(--accent);font-size:0.88rem;font-weight:500;">
-          <div class="spinner-ring" style="width:18px;height:18px;border-width:2px;"></div>
-          Uploading & analyzing "${file.name}" with AI…
+        <div class="upload-status-box uploading">
+          <div class="upload-status-row">
+            <div class="spinner-ring" style="width:18px;height:18px;border-width:2px;"></div>
+            <div>
+              <div class="status-text" style="color:var(--accent-indigo);">Processing "${esc(file.name)}"</div>
+              <div class="status-sub">Running OCR extraction, AI analysis, and vector indexing…</div>
+            </div>
+          </div>
+          <div class="progress-bar"><div class="fill" id="uploadProgress" style="width:40%;"></div></div>
         </div>
-        <div class="progress-bar" style="margin-top:10px;"><div class="fill" id="uploadProgress" style="width:65%;"></div></div>
       `;
 
       try {
         await Api.uploadDocument(file);
-        const progressEl = document.getElementById("uploadProgress");
-        if (progressEl) progressEl.style.width = "100%";
+        const prog = document.getElementById("uploadProgress");
+        if (prog) prog.style.width = "100%";
+
         statusBox.innerHTML = `
-          <div style="display:flex;align-items:center;gap:8px;color:#10b981;font-size:0.88rem;font-weight:500;margin-top:8px;">
-            <span>✨</span> Upload complete! AI analysis (OCR, Embeddings & Gemini) is running...
+          <div class="upload-status-box success">
+            <div class="upload-status-row">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-emerald)" stroke-width="2"><path d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+              <div>
+                <div class="status-text" style="color:var(--accent-emerald);">Upload complete</div>
+                <div class="status-sub">AI pipeline is analyzing your document in the background.</div>
+              </div>
+            </div>
           </div>
         `;
-        setTimeout(() => {
-          document.getElementById("filePreview").innerHTML = "";
-        }, 1000);
-        showToast("Document uploaded! AI analysis is running.", "success");
+
+        showToast("Document uploaded successfully", "success");
+        setTimeout(() => { document.getElementById("filePreview").innerHTML = ""; }, 1200);
         loadDocuments();
       } catch (e) {
-        errBox.textContent = e.message;
+        errBox.textContent = e.message || "Upload failed";
         statusBox.innerHTML = "";
-        showToast("Upload failed: " + e.message, "error");
+        showToast("Upload failed: " + (e.message || "Server error"), "error");
       }
     }
 
-    // ─── Document list ───
-    function statusBadge(status) {
-      if (status === "processing") {
-        return `<span class="badge processing" style="display:inline-flex;align-items:center;gap:6px;"><span class="spinner-ring" style="width:10px;height:10px;border-width:1.5px;"></span> processing</span>`;
+    // ─── Document List ───
+    async function loadDocuments() {
+      if (pollTimer) clearTimeout(pollTimer);
+      const container = document.getElementById("docContent");
+      const chip = document.getElementById("docCountChip");
+
+      try {
+        const res = await Api.listDocuments();
+        const docs = res.documents || res || [];
+        allDocsCache = docs;
+        if (chip) chip.textContent = docs.length;
+        renderDocs();
+
+        if (docs.some(d => d.status === "processing" || d.status === "uploaded")) {
+          pollTimer = setTimeout(loadDocuments, 2500);
+        }
+      } catch (e) {
+        container.innerHTML = `<div class="error" style="padding:20px;text-align:center;">Failed to load documents: ${esc(e.message)}</div>`;
       }
-      return `<span class="badge ${status}">${status}</span>`;
     }
 
+    function renderDocs() {
+      const container = document.getElementById("docContent");
+      const query = (searchInput.value || "").trim().toLowerCase();
+
+      let filtered = allDocsCache;
+      if (query) {
+        filtered = allDocsCache.filter(d =>
+          (d.filename && d.filename.toLowerCase().includes(query)) ||
+          (d.doc_type && d.doc_type.toLowerCase().includes(query)) ||
+          (d.status && d.status.toLowerCase().includes(query))
+        );
+      }
+
+      if (!filtered.length) {
+        container.innerHTML = `
+          <div class="empty-block">
+            <div class="eb-icon">
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5"><path d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m6.75 12H9.75m3 0v3.375m0-3.375a1.5 1.5 0 0 1 1.5 1.5v.75a1.5 1.5 0 0 1-1.5 1.5h-.75m-3-3.375v3.375m0-3.375a1.5 1.5 0 0 0-1.5 1.5v.75a1.5 1.5 0 0 0 1.5 1.5h.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+            </div>
+            <h3>${query ? "No matching documents" : "No documents yet"}</h3>
+            <p>${query ? "Try a different search term." : "Upload your first document above to start AI-powered analysis."}</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `<div class="doc-cards-list">${filtered.map(d => renderDocRow(d)).join("")}</div>`;
+    }
+
+    function renderDocRow(d) {
+      const ext = (d.filename || "").split(".").pop().toLowerCase();
+      const iconClass = ["png","jpg","jpeg","tiff","bmp"].includes(ext) ? "img" : (ext === "pdf" ? "pdf" : ext === "docx" ? "docx" : "txt");
+      const extLabel = ext.toUpperCase();
+      const escapedName = d.filename.replace(/'/g, "\\'");
+
+      let statusHtml;
+      if (d.status === "processed") {
+        statusHtml = `<span class="badge processed">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="m4.5 12.75 6 6 9-13.5"/></svg>
+          Processed</span>`;
+      } else if (d.status === "processing" || d.status === "uploaded") {
+        statusHtml = `<span class="badge processing">
+          <span class="spinner-ring" style="width:10px;height:10px;border-width:1.5px;"></span>
+          Processing</span>`;
+      } else if (d.status === "failed") {
+        statusHtml = `<span class="badge failed">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 18 18 6M6 6l12 12"/></svg>
+          Failed</span>`;
+      } else {
+        statusHtml = `<span class="badge">${esc(d.status)}</span>`;
+      }
+
+      return `
+        <div class="doc-card-row">
+          <div class="dcr-file">
+            <div class="dcr-file-icon ${iconClass}">${extLabel}</div>
+            <div class="dcr-file-info">
+              <div class="dcr-file-name">${esc(d.filename)}</div>
+              <div class="dcr-file-meta">
+                <span>${esc(d.doc_type || "Classifying…")}</span>
+                <span class="sep"></span>
+                <span>${timeAgo(d.uploaded_at)}</span>
+              </div>
+            </div>
+          </div>
+          <div class="dcr-status">${statusHtml}</div>
+          <a href="chat.html?doc=${d.id}" class="chat-link">
+            <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"/></svg>
+            Chat
+          </a>
+          <div class="dcr-actions">
+            <button class="action-btn" onclick="Api.downloadDocument('${d.id}', '${escapedName}')" title="Download">
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            </button>
+            <button class="action-btn" onclick="reprocessDoc('${d.id}', '${escapedName}')" title="Reprocess">
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182"/></svg>
+            </button>
+            <button class="action-btn danger" onclick="deleteDoc('${d.id}', '${escapedName}')" title="Delete">
+              <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/></svg>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // ─── Actions ───
     async function deleteDoc(id, filename) {
       const confirmed = await showConfirm(
         "Delete document?",
-        `This will permanently delete "${filename}" and all associated data (entities, embeddings, chat history).`
+        `This will permanently delete "${filename}" and all associated data.`
       );
       if (!confirmed) return;
       try {
@@ -169,62 +965,27 @@
       }
     }
 
-    async function loadDocuments() {
-      if (pollTimer) clearTimeout(pollTimer);
-      const container = document.getElementById("docContent");
+    async function reprocessDoc(id, filename) {
       try {
-        const res = await Api.listDocuments();
-        const docs = res.documents || res; // handle both paginated and legacy
-
-        if (!docs.length) {
-          container.innerHTML = `
-            <div class="empty-state">
-              <div class="icon">📂</div>
-              <h3>No documents yet</h3>
-              <p>Upload your first document to get started with AI-powered analysis.</p>
-            </div>
-          `;
-          return;
-        }
-
-        container.innerHTML = `
-          <table>
-            <thead>
-              <tr>
-                <th>Document</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Uploaded</th>
-                <th></th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${docs.map(d => `
-                <tr>
-                  <td style="font-weight:500;">${d.filename}</td>
-                  <td><span class="badge">${d.doc_type || "processing..."}</span></td>
-                  <td>${statusBadge(d.status)}</td>
-                  <td class="muted" style="font-size:0.82rem;">${timeAgo(d.uploaded_at)}</td>
-                  <td><a href="chat.html?doc=${d.id}" style="font-size:0.85rem;font-weight:500;">Chat →</a></td>
-                  <td style="display:flex;gap:4px;">
-                    <button class="btn-icon" onclick="Api.downloadDocument('${d.id}', '${d.filename.replace(/'/g, "\\'")}')" title="Download original document">📥</button>
-                    <button class="btn-icon" onclick="deleteDoc('${d.id}', '${d.filename.replace(/'/g, "\\'")}')" title="Delete document">🗑</button>
-                  </td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
-        `;
-
-        if (docs.some(d => d.status === "processing" || d.status === "uploaded")) {
-          pollTimer = setTimeout(loadDocuments, 800);
-        }
+        await Api.reprocessDocument(id);
+        showToast(`Reprocessing "${filename}"…`, "info");
+        loadDocuments();
       } catch (e) {
-        container.innerHTML = `<p class="error">${e.message}</p>`;
+        showToast("Reprocess failed: " + e.message, "error");
       }
     }
 
+    // ─── Helpers ───
+    function esc(str) {
+      if (!str) return "";
+      return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+    }
+
+    // ─── Event Listeners ───
+    searchInput.addEventListener("input", renderDocs);
+    refreshBtn.addEventListener("click", () => { loadDocuments(); });
+
+    // ─── Initial Load ───
     loadDocuments();
   </script>
 </body>

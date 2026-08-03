@@ -3,183 +3,824 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="description" content="Chat with your document using AI-powered Q&A in DocPulse AI" />
-<title>DocPulse AI · Chat</title>
+<meta name="description" content="Interactive Document Intelligence & Grounded AI Q&A Chat" />
+<title>DocPulse AI · Document Q&A Workspace</title>
 <link rel="stylesheet" href="css/style.css" />
+<style>
+  /* ─── Premium Glassmorphism Chat Layout Overhaul ─── */
+  .chat-page-container {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 20px 32px 40px 32px;
+  }
+
+  .chat-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 24px;
+    align-items: start;
+    min-height: calc(100vh - 120px);
+  }
+
+  @media (max-width: 1024px) {
+    .chat-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ─── Left Sidebar Cards & Organization ─── */
+  .chat-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    padding-right: 8px;
+    padding-bottom: 30px;
+  }
+
+  /* Custom scrollbar for sidebar */
+  .chat-sidebar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .chat-sidebar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 4px;
+  }
+  .chat-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.4);
+    border-radius: 4px;
+  }
+  .chat-sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.8);
+  }
+
+  .doc-header-card {
+    background: var(--panel);
+    backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--border-hover);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    position: relative;
+    box-shadow: var(--shadow-md);
+    flex-shrink: 0;
+  }
+  
+  .doc-header-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: var(--gradient-brand);
+  }
+
+  .doc-file-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .doc-type-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15));
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+  }
+
+  .doc-title-text {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.3;
+    word-break: break-word;
+  }
+
+  .doc-tags-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .pill-badge {
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+  }
+
+  .pill-badge.status-processed {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #34d399;
+  }
+
+  .pill-badge.status-processing {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #fbbf24;
+  }
+
+  /* Sidebar Collapsible Cards */
+  .info-card {
+    background: var(--panel);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    transition: border-color var(--transition-fast);
+    flex-shrink: 0;
+  }
+
+  .info-card:hover {
+    border-color: rgba(255, 255, 255, 0.14);
+  }
+
+  .info-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    cursor: pointer;
+    user-select: none;
+    background: rgba(255, 255, 255, 0.025);
+    border-bottom: 1px solid transparent;
+    transition: background var(--transition-fast);
+  }
+
+  .info-header:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .info-header.open {
+    border-bottom-color: var(--border);
+  }
+
+  .info-header h3 {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .info-header .arrow {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    transition: transform var(--transition-fast);
+  }
+
+  .info-header.open .arrow {
+    transform: rotate(180deg);
+  }
+
+  .info-body {
+    padding: 14px 18px 18px 18px;
+    display: none;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.65;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .info-body.open {
+    display: block;
+  }
+
+  /* Structured Sidebar Lists & Bullets */
+  .sidebar-bullet-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .sidebar-bullet-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.83rem;
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+
+  .sidebar-bullet-list .bullet-dot {
+    color: var(--accent-cyan);
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+
+  .sidebar-bullet-list .bullet-text {
+    flex: 1;
+  }
+
+  .sidebar-para {
+    margin-bottom: 6px;
+    font-size: 0.84rem;
+    line-height: 1.55;
+    color: var(--text-secondary);
+  }
+
+  .entity-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .entity-pill {
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    color: #a5b4fc;
+    word-break: break-all;
+  }
+
+  /* ─── Right Main Chat Box ─── */
+  .chat-main-card {
+    background: var(--panel-solid);
+    border: 1px solid var(--border-hover);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg), var(--shadow-glow);
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 120px);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .chat-header-bar {
+    padding: 16px 24px;
+    background: rgba(15, 18, 28, 0.9);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .chat-header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .chat-header-title h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .chat-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: #34d399;
+    font-weight: 600;
+    background: rgba(16, 185, 129, 0.1);
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+  }
+
+  .chat-status-indicator .pulse-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 8px #34d399;
+    animation: status-pulse 2s infinite;
+  }
+
+  @keyframes status-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.3); }
+  }
+
+  /* Quick Suggestion Chips */
+  .quick-chips-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 24px;
+    background: rgba(255, 255, 255, 0.015);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+
+  .quick-chip {
+    padding: 5px 13px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-secondary);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all var(--transition-fast);
+  }
+
+  .quick-chip:hover {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: rgba(99, 102, 241, 0.35);
+    color: #ffffff;
+    transform: translateY(-1px);
+  }
+
+  /* Scrollable Messages Area */
+  .messages-viewport {
+    flex: 1;
+    padding: 20px 24px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    background: radial-gradient(ellipse at bottom, rgba(99, 102, 241, 0.03), transparent 70%);
+  }
+
+  .welcome-card {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(168, 85, 247, 0.04));
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    text-align: center;
+    margin: auto 0;
+  }
+
+  .welcome-card h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .welcome-card p {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    max-width: 500px;
+    margin: 0 auto 16px auto;
+  }
+
+  /* Chat Speech Bubbles */
+  .chat-msg-row {
+    display: flex;
+    gap: 12px;
+    max-width: 85%;
+  }
+
+  .chat-msg-row.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+  }
+
+  .chat-msg-row.ai {
+    align-self: flex-start;
+  }
+
+  .msg-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .chat-msg-row.user .msg-avatar {
+    background: var(--gradient-brand);
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+  }
+
+  .chat-msg-row.ai .msg-avatar {
+    background: rgba(6, 182, 212, 0.15);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+    color: var(--accent-cyan);
+  }
+
+  .msg-bubble {
+    padding: 14px 18px;
+    border-radius: 18px;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .chat-msg-row.user .msg-bubble {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.22), rgba(168, 85, 247, 0.22));
+    border: 1px solid rgba(168, 85, 247, 0.35);
+    color: #ffffff;
+    border-top-right-radius: 4px;
+  }
+
+  .chat-msg-row.ai .msg-bubble {
+    background: rgba(22, 27, 42, 0.85);
+    border: 1px solid var(--border-hover);
+    color: var(--text-primary);
+    border-top-left-radius: 4px;
+    backdrop-filter: blur(12px);
+  }
+
+  .msg-time {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+    display: block;
+  }
+
+  .chat-msg-row.user .msg-time {
+    text-align: right;
+  }
+
+  /* Formatting inside AI responses */
+  .chat-bullet-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 6px 0;
+  }
+
+  .chat-bullet-icon {
+    color: var(--accent-cyan);
+    font-weight: bold;
+  }
+
+  .chat-bullet-text {
+    flex: 1;
+  }
+
+  .chat-text-line {
+    margin-bottom: 4px;
+  }
+
+  /* Typing Indicator */
+  .typing-box {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 18px;
+    background: rgba(22, 27, 42, 0.85);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    border-top-left-radius: 4px;
+    width: fit-content;
+  }
+
+  .typing-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-cyan);
+    animation: typing-bounce 1.4s infinite ease-in-out both;
+  }
+
+  .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+  .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+  @keyframes typing-bounce {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  /* ─── Bottom Chat Input Area ─── */
+  .chat-input-container {
+    padding: 14px 24px;
+    background: rgba(15, 18, 28, 0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+  }
+
+  .chat-input-box {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid var(--border-hover);
+    border-radius: var(--radius-md);
+    padding: 8px 12px 8px 16px;
+    transition: all var(--transition-fast);
+  }
+
+  .chat-input-box:focus-within {
+    border-color: var(--accent-indigo);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .chat-textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.92rem;
+    resize: none;
+    max-height: 120px;
+    min-height: 24px;
+    line-height: 1.5;
+  }
+
+  .chat-textarea::placeholder {
+    color: var(--text-muted);
+  }
+
+  .send-btn {
+    background: var(--gradient-brand);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #ffffff;
+    padding: 10px 20px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all var(--transition-fast);
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+  }
+
+  .send-btn:active {
+    transform: scale(0.98);
+  }
+
+  .chat-error-banner {
+    color: var(--accent-rose);
+    font-size: 0.82rem;
+    margin-top: 8px;
+    padding: 0 4px;
+  }
+</style>
 </head>
 <body>
+  <!-- Top Navigation -->
   <div class="topbar">
-    <a href="index.html" class="brand"><div class="dot-logo"></div>DocPulse AI</a>
+    <a href="index.html" class="brand">
+      <div class="dot-logo"></div>DocPulse AI
+    </a>
     <nav></nav>
   </div>
 
-  <div class="container">
-    <div class="split-layout" id="mainLayout">
-      <!-- Sidebar — Document Info -->
-      <div class="sidebar">
-        <div class="card">
-          <h1 id="docTitle" style="font-size:1.15rem;">Loading…</h1>
-          <p class="muted" id="docMeta" style="margin-top:4px;font-size:0.82rem;"></p>
-        </div>
+  <div class="chat-page-container">
+    <div class="chat-layout">
 
-        <!-- Summary -->
-        <div class="card">
-          <div class="collapsible-header open" onclick="toggleCollapsible(this)">
-            <h3 style="margin:0;">📝 Summary</h3>
-            <span class="arrow">▼</span>
-          </div>
-          <div class="collapsible-body open">
-            <p id="docSummary" class="muted">Loading…</p>
-          </div>
-        </div>
+      <!-- ─── Left Sidebar ─── -->
+      <div class="chat-sidebar">
 
-        <!-- Risks -->
-        <div class="card">
-          <div class="collapsible-header open" onclick="toggleCollapsible(this)">
-            <h3 style="margin:0;">⚠️ Risks & Flags</h3>
-            <span class="arrow">▼</span>
-          </div>
-          <div class="collapsible-body open">
-            <p id="docRisks" class="muted">Loading…</p>
+        <!-- Document Main Card -->
+        <div class="doc-header-card">
+          <div class="doc-file-badge-row">
+            <div class="doc-type-icon">📄</div>
+            <div style="flex:1;min-width:0;">
+              <div class="doc-title-text" id="docTitle">Loading Document…</div>
+              <div class="doc-tags-wrap" id="docTagsRow" style="margin-top:6px;">
+                <span class="pill-badge" id="docTypeTag">document</span>
+                <span class="pill-badge status-processing" id="docStatusTag">loading</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Action Items -->
-        <div class="card">
-          <div class="collapsible-header" onclick="toggleCollapsible(this)">
-            <h3 style="margin:0;">✅ Action Items</h3>
+        <!-- 📝 Summary Card (Open by default) -->
+        <div class="info-card">
+          <div class="info-header open" onclick="toggleCard(this)">
+            <h3><span>📝</span> Executive Summary</h3>
             <span class="arrow">▼</span>
           </div>
-          <div class="collapsible-body">
-            <p id="docActions" class="muted">Loading…</p>
+          <div class="info-body open" id="docSummary">
+            Loading document summary…
           </div>
         </div>
 
-        <!-- Entities -->
-        <div class="card" id="entitiesCard" style="display:none;">
-          <div class="collapsible-header" onclick="toggleCollapsible(this)">
-            <h3 style="margin:0;">🏷️ Extracted Entities</h3>
+        <!-- ⚠️ Risks & Flags (Closed by default for neatness) -->
+        <div class="info-card">
+          <div class="info-header" onclick="toggleCard(this)">
+            <h3><span>⚠️</span> Risks & Compliance</h3>
             <span class="arrow">▼</span>
           </div>
-          <div class="collapsible-body">
-            <div class="entity-chips" id="entityChips"></div>
+          <div class="info-body" id="docRisks">
+            Analyzing document risks…
           </div>
         </div>
+
+        <!-- ✅ Action Items (Closed by default) -->
+        <div class="info-card">
+          <div class="info-header" onclick="toggleCard(this)">
+            <h3><span>✅</span> Key Action Items</h3>
+            <span class="arrow">▼</span>
+          </div>
+          <div class="info-body" id="docActions">
+            Extracting action items…
+          </div>
+        </div>
+
+        <!-- 🏷️ Extracted Entities (Closed by default) -->
+        <div class="info-card" id="entitiesCard" style="display:none;">
+          <div class="info-header" onclick="toggleCard(this)">
+            <h3><span>🏷️</span> Named Entities</h3>
+            <span class="arrow">▼</span>
+          </div>
+          <div class="info-body">
+            <div class="entity-grid" id="entityGrid"></div>
+          </div>
+        </div>
+
       </div>
 
-      <!-- Main — Chat -->
-      <div class="main">
-        <div class="card" style="display:flex;flex-direction:column;min-height:520px;">
-          <h2>💬 Chat with this document</h2>
-          <div class="chat-window" id="chatWindow" style="flex:1;"></div>
-          <div class="error" id="chatError"></div>
-          <div class="chat-input-row">
-            <textarea id="questionInput" rows="1" placeholder="Ask a question about this document…" aria-label="Question input"></textarea>
-            <button id="askBtn" onclick="sendQuestion()">Ask</button>
+      <!-- ─── Right Main Chat Box ─── -->
+      <div class="chat-main-card">
+
+        <!-- Header -->
+        <div class="chat-header-bar">
+          <div class="chat-header-title">
+            <span style="font-size:1.2rem;">💬</span>
+            <h2>Document Intelligence Assistant</h2>
+          </div>
+          <div class="chat-status-indicator">
+            <div class="pulse-dot"></div> Grounded Vector RAG Active
           </div>
         </div>
+
+        <!-- Quick Chips -->
+        <div class="quick-chips-bar">
+          <button class="quick-chip" onclick="askQuickPrompt('Who is the candidate and what is their role?')">👤 Candidate Name</button>
+          <button class="quick-chip" onclick="askQuickPrompt('Give me a bulleted summary of this document.')">📝 Summary</button>
+          <button class="quick-chip" onclick="askQuickPrompt('What are the key technical skills and tools listed?')">🛠️ Skills & Tools</button>
+          <button class="quick-chip" onclick="askQuickPrompt('give me the links')">📧 Contact Info</button>
+        </div>
+
+        <!-- Messages Viewport -->
+        <div class="messages-viewport" id="chatViewport">
+          <!-- Initial Welcome state if no history -->
+          <div class="welcome-card" id="welcomeBox">
+            <h3>Ready for Document Questions</h3>
+            <p>Ask anything about this document. Our dense vector RAG engine will find exact context excerpts and provide answers grounded in the text.</p>
+          </div>
+        </div>
+
+        <!-- Input Bar -->
+        <div class="chat-input-container">
+          <div class="chat-input-box">
+            <textarea id="questionInput" class="chat-textarea" rows="1" placeholder="Ask a question about this document… (e.g. whats the candidate name?)" aria-label="Question input"></textarea>
+            <button id="sendBtn" class="send-btn" onclick="sendQuestion()">
+              <span>Ask</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+          </div>
+          <div class="chat-error-banner" id="chatError"></div>
+        </div>
+
       </div>
+
     </div>
-  <!-- Site Footer -->
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <div class="brand-signature">
-        <div class="dot-logo"></div>
-        <strong>DocPulse AI</strong> — Engineered by Tarun P
-      </div>
-      <div style="display:flex;gap:20px;">
-        <a href="index.html">Home</a>
-        <a href="upload.html">Upload</a>
-        <a href="dashboard.html">Dashboard</a>
-      </div>
-    </div>
-  </footer>
+  </div>
 
-  <script src="js/api.js"></script>
+  <script src="js/api.js?v=4"></script>
   <script>
     requireAuth();
-    document.getElementById("logoutLink").addEventListener("click", confirmLogout);
 
     const params = new URLSearchParams(window.location.search);
     const docId = params.get("doc");
     if (!docId) window.location.href = "upload.html";
 
-    // ─── Collapsible sections ───
-    function toggleCollapsible(header) {
+    function toggleCard(header) {
       header.classList.toggle("open");
       const body = header.nextElementSibling;
       body.classList.toggle("open");
     }
 
-    // ─── Load document details ───
-    let chatPollTimer = null;
+    // ─── Format Sidebar Bullets & Paragraphs ───
+    function formatSidebarContent(text) {
+      if (!text || !text.trim()) return "<p class='sidebar-para'>None identified.</p>";
+      let str = text.trim();
+
+      // Check if text has bullet points
+      if (str.includes("•") || str.includes("\n- ") || str.includes("\n* ")) {
+        const items = str.split(/•|\n- |\n\* /).map(p => p.trim()).filter(p => p.length > 0);
+        if (items.length > 0) {
+          return `<ul class="sidebar-bullet-list">` +
+            items.map(item => `<li><span class="bullet-dot">•</span><div class="bullet-text">${escapeHtml(item)}</div></li>`).join('') +
+            `</ul>`;
+        }
+      }
+
+      // Paragraph formatting
+      const paras = str.split("\n\n").filter(p => p.trim());
+      return paras.map(p => `<p class="sidebar-para">${escapeHtml(p.trim())}</p>`).join("");
+    }
+
+    // ─── Load Document Info ───
+    let pollTimer = null;
 
     async function loadDoc() {
-      if (chatPollTimer) clearTimeout(chatPollTimer);
+      if (pollTimer) clearTimeout(pollTimer);
       try {
         const doc = await Api.getDocument(docId);
         document.getElementById("docTitle").textContent = doc.filename;
-        document.getElementById("docMeta").innerHTML =
-          `<span class="badge">${doc.doc_type || "processing..."}</span> <span class="badge ${doc.status}">${doc.status}</span>`;
+        document.getElementById("docTypeTag").textContent = doc.doc_type || "document";
+        
+        const statusTag = document.getElementById("docStatusTag");
+        statusTag.textContent = doc.status;
+        statusTag.className = `pill-badge status-${doc.status}`;
 
         if (doc.status === "processing" || doc.status === "uploaded") {
-          document.getElementById("docSummary").innerHTML = `<div style="display:flex;align-items:center;gap:8px;color:var(--accent);font-size:0.85rem;"><div class="spinner-ring" style="width:14px;height:14px;border-width:1.5px;"></div> AI is analyzing document... Details will refresh automatically.</div>`;
-          document.getElementById("docRisks").textContent = "Analyzing risks & compliance checks...";
-          document.getElementById("docActions").textContent = "Extracting action items...";
-          chatPollTimer = setTimeout(loadDoc, 1500);
+          document.getElementById("docSummary").innerHTML = `<div style="display:flex;align-items:center;gap:8px;color:var(--accent-amber);"><div class="spinner-ring" style="width:14px;height:14px;"></div> Analyzing text layer…</div>`;
+          document.getElementById("docRisks").innerHTML = "Evaluating compliance rules…";
+          document.getElementById("docActions").innerHTML = "Extracting action items…";
+          pollTimer = setTimeout(loadDoc, 2000);
         } else {
-          document.getElementById("docSummary").textContent = doc.summary || "No summary available.";
-          document.getElementById("docRisks").textContent = doc.risks || "No risks identified.";
-          document.getElementById("docActions").textContent = doc.action_items || "No action items identified.";
+          document.getElementById("docSummary").innerHTML = formatSidebarContent(doc.summary);
+          document.getElementById("docRisks").innerHTML = formatSidebarContent(doc.risks);
+          document.getElementById("docActions").innerHTML = formatSidebarContent(doc.action_items);
         }
 
-        // Entities
         if (doc.entities && doc.entities.length > 0) {
           document.getElementById("entitiesCard").style.display = "block";
-          const chips = document.getElementById("entityChips");
-          chips.innerHTML = doc.entities.map(e =>
-            `<span class="entity-chip ${e.type}">${e.type}: ${e.value}</span>`
+          const grid = document.getElementById("entityGrid");
+          grid.innerHTML = doc.entities.map(e =>
+            `<div class="entity-pill">${e.type}: ${escapeHtml(e.value)}</div>`
           ).join("");
         }
-      } catch (e) {
-        document.getElementById("docTitle").textContent = "Error";
-        document.getElementById("docMeta").textContent = e.message;
+      } catch (err) {
+        document.getElementById("docTitle").textContent = "Document Error";
+        showToast("Failed to load document details: " + err.message, "error");
       }
     }
 
-    // ─── Chat ───
+    // ─── Messages & Chat ───
     function appendMessage(role, text, timestamp) {
-      const win = document.getElementById("chatWindow");
-      const div = document.createElement("div");
-      div.className = `msg ${role}`;
-      const time = timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-      const body = role === 'a' ? formatMessageContent(text) : escapeHtml(text);
-      div.innerHTML = `${body}${time ? `<span class="timestamp">${time}</span>` : ''}`;
-      win.appendChild(div);
-      win.scrollTop = win.scrollHeight;
+      const welcome = document.getElementById("welcomeBox");
+      if (welcome) welcome.style.display = "none";
+
+      const viewport = document.getElementById("chatViewport");
+      const row = document.createElement("div");
+      row.className = `chat-msg-row ${role === 'q' ? 'user' : 'ai'}`;
+
+      const avatarText = role === 'q' ? 'U' : 'AI';
+      const timeStr = timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      const contentHtml = role === 'a' ? formatMarkdown(text) : escapeHtml(text);
+
+      row.innerHTML = `
+        <div class="msg-avatar">${avatarText}</div>
+        <div>
+          <div class="msg-bubble">${contentHtml}</div>
+          <span class="msg-time">${timeStr}</span>
+        </div>
+      `;
+
+      viewport.appendChild(row);
+      viewport.scrollTop = viewport.scrollHeight;
     }
 
-    function formatMessageContent(text) {
+    function formatMarkdown(text) {
       if (!text) return "";
       let html = escapeHtml(text);
 
-      // Convert **bold** to <strong>bold</strong>
+      // Bold text **bold**
       html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 
-      // Convert URLs into clickable links
-      html = html.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer" style="color:var(--accent-2);text-decoration:underline;">$1</a>');
+      // URLs into clickable links
+      html = html.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" style="color:var(--accent-cyan);text-decoration:underline;">$1</a>');
 
       const lines = html.split('\n');
-      let formattedLines = lines.map(line => {
+      return lines.map(line => {
         let trimmed = line.trim();
         if (trimmed.startsWith('•') || trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
           const content = trimmed.replace(/^[•\-\*]\s*/, '');
           return `<div class="chat-bullet-row"><span class="chat-bullet-icon">•</span><div class="chat-bullet-text">${content}</div></div>`;
         }
-        return line ? `<div class="chat-text-line">${line}</div>` : '<div class="chat-spacer"></div>';
-      });
-
-      return formattedLines.join('');
+        return line ? `<div class="chat-text-line">${line}</div>` : '';
+      }).join('');
     }
 
     function escapeHtml(text) {
@@ -188,30 +829,39 @@
       return div.innerHTML;
     }
 
-    function showTyping() {
-      const win = document.getElementById("chatWindow");
-      const div = document.createElement("div");
-      div.className = "typing-indicator";
-      div.id = "typingIndicator";
-      div.innerHTML = "<span></span><span></span><span></span>";
-      win.appendChild(div);
-      win.scrollTop = win.scrollHeight;
+    function showTypingIndicator() {
+      const viewport = document.getElementById("chatViewport");
+      const row = document.createElement("div");
+      row.className = "chat-msg-row ai";
+      row.id = "typingRow";
+      row.innerHTML = `
+        <div class="msg-avatar">AI</div>
+        <div class="typing-box">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      `;
+      viewport.appendChild(row);
+      viewport.scrollTop = viewport.scrollHeight;
     }
 
-    function hideTyping() {
-      const el = document.getElementById("typingIndicator");
+    function hideTypingIndicator() {
+      const el = document.getElementById("typingRow");
       if (el) el.remove();
     }
 
     async function loadHistory() {
       try {
         const history = await Api.chatHistory(docId);
-        history.forEach(h => {
-          appendMessage("q", h.question, h.created_at);
-          appendMessage("a", h.answer, h.created_at);
-        });
-      } catch (e) {
-        document.getElementById("chatError").textContent = e.message;
+        if (history && history.length > 0) {
+          history.forEach(h => {
+            appendMessage("q", h.question, h.created_at);
+            appendMessage("a", h.answer, h.created_at);
+          });
+        }
+      } catch (err) {
+        console.warn("Could not fetch chat history:", err);
       }
     }
 
@@ -222,29 +872,36 @@
 
       input.value = "";
       input.style.height = "auto";
-      appendMessage("q", question);
       document.getElementById("chatError").textContent = "";
-      showTyping();
+
+      appendMessage("q", question);
+      showTypingIndicator();
 
       try {
         const res = await Api.askQuestion(docId, question);
-        hideTyping();
+        hideTypingIndicator();
         appendMessage("a", res.answer);
-      } catch (e) {
-        hideTyping();
-        document.getElementById("chatError").textContent = e.message;
-        showToast("Failed to get answer: " + e.message, "error");
+      } catch (err) {
+        hideTypingIndicator();
+        document.getElementById("chatError").textContent = err.message || "Failed to fetch response from server.";
+        showToast("Error getting answer: " + err.message, "error");
       }
     }
 
-    // Auto-resize textarea
-    const questionInput = document.getElementById("questionInput");
-    questionInput.addEventListener("input", function() {
+    function askQuickPrompt(promptText) {
+      const input = document.getElementById("questionInput");
+      input.value = promptText;
+      sendQuestion();
+    }
+
+    // Auto-resize input
+    const txt = document.getElementById("questionInput");
+    txt.addEventListener("input", function() {
       this.style.height = "auto";
       this.style.height = Math.min(this.scrollHeight, 120) + "px";
     });
 
-    questionInput.addEventListener("keydown", (e) => {
+    txt.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         sendQuestion();
