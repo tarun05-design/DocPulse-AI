@@ -30,22 +30,30 @@ _layout_pipeline = None
 def _get_trocr_pipeline():
     global _trocr_pipeline
     if _trocr_pipeline is None:
-        from transformers import pipeline
-        model_name = current_app.config["HF_OCR_MODEL"]
-        logger.info("Loading TrOCR model: %s", model_name)
-        _trocr_pipeline = pipeline("image-to-text", model=model_name)
+        try:
+            from transformers import pipeline
+            model_name = current_app.config["HF_OCR_MODEL"]
+            logger.info("Loading TrOCR model: %s", model_name)
+            _trocr_pipeline = pipeline("image-to-text", model=model_name)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("TrOCR model unavailable: %s", exc)
+            return None
     return _trocr_pipeline
 
 
 def _get_layout_pipeline():
     global _layout_pipeline
     if _layout_pipeline is None:
-        from transformers import AutoProcessor, AutoModelForTokenClassification
-        model_name = current_app.config["HF_LAYOUT_MODEL"]
-        logger.info("Loading LayoutLMv3 model: %s", model_name)
-        processor = AutoProcessor.from_pretrained(model_name, apply_ocr=True)
-        model = AutoModelForTokenClassification.from_pretrained(model_name)
-        _layout_pipeline = (processor, model)
+        try:
+            from transformers import AutoProcessor, AutoModelForTokenClassification
+            model_name = current_app.config["HF_LAYOUT_MODEL"]
+            logger.info("Loading LayoutLMv3 model: %s", model_name)
+            processor = AutoProcessor.from_pretrained(model_name, apply_ocr=True)
+            model = AutoModelForTokenClassification.from_pretrained(model_name)
+            _layout_pipeline = (processor, model)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("LayoutLMv3 model unavailable: %s", exc)
+            return None
     return _layout_pipeline
 
 
