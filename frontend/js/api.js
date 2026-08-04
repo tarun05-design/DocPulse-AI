@@ -27,8 +27,11 @@ function getUser() {
 
 function requireAuth() {
   if (!getToken()) {
-    window.location.href = "login.html";
+    const current = encodeURIComponent(window.location.pathname.split("/").pop() + window.location.search);
+    window.location.href = `login.html?reason=auth_required&redirect=${current}`;
+    return false;
   }
+  return true;
 }
 
 async function confirmLogout(e) {
@@ -67,11 +70,17 @@ function renderNavbar() {
         <div class="profile-menu" id="profileDropdownMenu">
           <div class="profile-menu-header">
             <div class="name">${user.name || "User"}</div>
-            <div class="email">${user.email || ""}</div>
+            <div class="email" title="${user.email || ''}">${user.email || ""}</div>
           </div>
-          <a href="dashboard.html">📊 Dashboard</a>
-          <a href="upload.html">📂 Workspace</a>
-          <button class="logout-item" id="navLogoutBtn">🚪 Log Out</button>
+          <a href="dashboard.html" class="profile-item">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+            Dashboard
+          </a>
+          <div class="profile-menu-divider"></div>
+          <button class="logout-item" id="navLogoutBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Log Out
+          </button>
         </div>
       </div>
     `;

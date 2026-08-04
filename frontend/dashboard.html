@@ -5,7 +5,144 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="description" content="DocPulse AI dashboard — analytics overview of your documents" />
 <title>DocPulse AI · Dashboard</title>
-<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/style.css?v=20260804" />
+<style>
+  /* ─── Guaranteed Overview Stat Grid & Profile Dropdown Styles ─── */
+  .stat-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)) !important;
+    gap: 16px !important;
+    margin-top: 12px !important;
+  }
+
+  .stat-card {
+    background: rgba(255, 255, 255, 0.03) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 12px !important;
+    padding: 20px 22px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+
+  .stat-card:hover {
+    transform: translateY(-3px) !important;
+    border-color: rgba(99, 102, 241, 0.4) !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 15px rgba(99, 102, 241, 0.15) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .stat-card-icon {
+    width: 46px !important;
+    height: 46px !important;
+    border-radius: 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+  }
+
+  .stat-card-icon.blue { background: rgba(99, 102, 241, 0.15) !important; border: 1px solid rgba(99, 102, 241, 0.3) !important; color: #818cf8 !important; }
+  .stat-card-icon.green { background: rgba(16, 185, 129, 0.15) !important; border: 1px solid rgba(16, 185, 129, 0.3) !important; color: #34d399 !important; }
+  .stat-card-icon.purple { background: rgba(168, 85, 247, 0.15) !important; border: 1px solid rgba(168, 85, 247, 0.3) !important; color: #c084fc !important; }
+  .stat-card-icon.rose { background: rgba(244, 63, 94, 0.15) !important; border: 1px solid rgba(244, 63, 94, 0.3) !important; color: #fb7185 !important; }
+
+  .stat-card-info {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+  }
+
+  .stat-card-num {
+    font-size: 1.75rem !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  .stat-card-label {
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    color: #94a3b8 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  /* Profile Dropdown Override */
+  .profile-menu {
+    width: 220px !important;
+    padding: 8px !important;
+    background: #0f121d !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5) !important;
+  }
+
+  .profile-menu-header {
+    padding: 10px 12px !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+    margin-bottom: 4px !important;
+  }
+
+  .profile-menu-header .name {
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
+    color: #ffffff !important;
+  }
+
+  .profile-menu-header .email {
+    font-size: 0.76rem !important;
+    color: #94a3b8 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    margin-top: 2px !important;
+  }
+
+  .profile-menu-divider {
+    height: 1px !important;
+    background: rgba(255,255,255,0.08) !important;
+    margin: 4px 0 !important;
+  }
+
+  .profile-menu a, .profile-menu button {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    padding: 10px 12px !important;
+    border-radius: 6px !important;
+    color: #cbd5e1 !important;
+    font-size: 0.88rem !important;
+    font-weight: 500 !important;
+    text-decoration: none !important;
+    background: transparent !important;
+    border: none !important;
+    width: 100% !important;
+    text-align: left !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .profile-menu a:hover, .profile-menu button:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+  }
+
+  .profile-menu .logout-item {
+    color: #f87171 !important;
+  }
+
+  .profile-menu .logout-item:hover {
+    background: rgba(239, 68, 68, 0.15) !important;
+    color: #fca5a5 !important;
+  }
+</style>
 </head>
 <body>
   <div class="topbar">
@@ -69,7 +206,7 @@
     </div>
   </footer>
 
-  <script src="js/api.js?v=2"></script>
+  <script src="js/api.js?v=20260804"></script>
   <script>
     requireAuth();
     const logoutBtn = document.getElementById("logoutLink");
@@ -103,26 +240,46 @@
         const processed = d.by_status?.processed || 0;
         const failed = d.by_status?.failed || 0;
         document.getElementById("statGrid").innerHTML = `
-          <div class="stat">
-            <div class="num">${d.total_documents}</div>
-            <div class="label">Total Documents</div>
+          <div class="stat-card">
+            <div class="stat-card-icon blue">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="stat-card-info">
+              <div class="stat-card-num num">${d.total_documents}</div>
+              <div class="stat-card-label">Total Documents</div>
+            </div>
           </div>
-          <div class="stat">
-            <div class="num">${processed}</div>
-            <div class="label">Processed</div>
+          <div class="stat-card">
+            <div class="stat-card-icon green">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+            <div class="stat-card-info">
+              <div class="stat-card-num num">${processed}</div>
+              <div class="stat-card-label">Processed</div>
+            </div>
           </div>
-          <div class="stat">
-            <div class="num">${d.total_chat_messages}</div>
-            <div class="label">Chat Messages</div>
+          <div class="stat-card">
+            <div class="stat-card-icon purple">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="stat-card-info">
+              <div class="stat-card-num num">${d.total_chat_messages}</div>
+              <div class="stat-card-label">Chat Messages</div>
+            </div>
           </div>
-          <div class="stat">
-            <div class="num">${failed}</div>
-            <div class="label">Failed</div>
+          <div class="stat-card">
+            <div class="stat-card-icon rose">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div class="stat-card-info">
+              <div class="stat-card-num num">${failed}</div>
+              <div class="stat-card-label">Failed</div>
+            </div>
           </div>
         `;
 
         // Animate counters
-        document.querySelectorAll('.stat .num').forEach(el => {
+        document.querySelectorAll('.stat-card .num').forEach(el => {
           const target = parseInt(el.textContent);
           if (isNaN(target) || target === 0) return;
           el.textContent = '0';

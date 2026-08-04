@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="description" content="Interactive Document Intelligence & Grounded AI Q&A Chat" />
 <title>DocPulse AI · Document Q&A Workspace</title>
-<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/style.css?v=20260804" />
 <style>
   /* ─── Premium Glassmorphism Chat Layout Overhaul ─── */
   .chat-page-container {
@@ -475,6 +475,33 @@
     margin-bottom: 4px;
   }
 
+  .chat-subheading {
+    font-weight: 700;
+    color: var(--accent-cyan);
+    margin-top: 14px;
+    margin-bottom: 6px;
+    font-size: 0.96rem;
+    line-height: 1.4;
+  }
+
+  .sidebar-subheading {
+    font-weight: 700;
+    color: var(--accent-cyan);
+    margin-top: 10px;
+    margin-bottom: 4px;
+    font-size: 0.88rem;
+  }
+
+  .sidebar-bullet-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 0.86rem;
+    line-height: 1.4;
+    color: var(--text-secondary);
+  }
+
   /* Typing Indicator */
   .typing-box {
     display: flex;
@@ -671,11 +698,11 @@
         </div>
 
         <!-- Quick Chips -->
-        <div class="quick-chips-bar">
-          <button class="quick-chip" onclick="askQuickPrompt('Who is the candidate and what is their role?')">👤 Candidate Name</button>
-          <button class="quick-chip" onclick="askQuickPrompt('Give me a bulleted summary of this document.')">📝 Summary</button>
-          <button class="quick-chip" onclick="askQuickPrompt('What are the key technical skills and tools listed?')">🛠️ Skills & Tools</button>
-          <button class="quick-chip" onclick="askQuickPrompt('give me the links')">📧 Contact Info</button>
+        <div class="quick-chips-bar" id="quickChipsBar">
+          <button class="quick-chip" onclick="askQuickPrompt('Provide a concise executive summary of this document.')">📝 Executive Summary</button>
+          <button class="quick-chip" onclick="askQuickPrompt('What are the main findings and key takeaways in this document?')">🔍 Key Takeaways</button>
+          <button class="quick-chip" onclick="askQuickPrompt('What risks, compliance concerns, or anomalies are highlighted?')">⚠️ Risks & Issues</button>
+          <button class="quick-chip" onclick="askQuickPrompt('What are the recommended action items and next steps?')">✅ Action Items</button>
         </div>
 
         <!-- Messages Viewport -->
@@ -690,7 +717,7 @@
         <!-- Input Bar -->
         <div class="chat-input-container">
           <div class="chat-input-box">
-            <textarea id="questionInput" class="chat-textarea" rows="1" placeholder="Ask a question about this document… (e.g. whats the candidate name?)" aria-label="Question input"></textarea>
+            <textarea id="questionInput" class="chat-textarea" rows="1" placeholder="Ask a question about this document… (e.g. key takeaways or summary)" aria-label="Question input"></textarea>
             <button id="sendBtn" class="send-btn" onclick="sendQuestion()">
               <span>Ask</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -704,7 +731,7 @@
     </div>
   </div>
 
-  <script src="js/api.js?v=4"></script>
+  <script src="js/api.js?v=20260804"></script>
   <script>
     requireAuth();
 
@@ -723,19 +750,77 @@
       if (!text || !text.trim()) return "<p class='sidebar-para'>None identified.</p>";
       let str = text.trim();
 
-      // Check if text has bullet points
-      if (str.includes("•") || str.includes("\n- ") || str.includes("\n* ")) {
-        const items = str.split(/•|\n- |\n\* /).map(p => p.trim()).filter(p => p.length > 0);
-        if (items.length > 0) {
-          return `<ul class="sidebar-bullet-list">` +
-            items.map(item => `<li><span class="bullet-dot">•</span><div class="bullet-text">${escapeHtml(item)}</div></li>`).join('') +
-            `</ul>`;
+      const lines = str.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      let outputHtml = '';
+
+      lines.forEach(line => {
+        const rawContent = line.replace(/^[•\-\*]\s*/, '').trim();
+        if (!rawContent) return;
+
+        const isSubheading = rawContent.endsWith(':') || 
+                            rawContent.endsWith('**:') || 
+                            (rawContent.startsWith('**') && rawContent.includes(':'));
+
+        if (isSubheading) {
+          const cleanHeading = escapeHtml(rawContent.replace(/\*\*/g, ''));
+          outputHtml += `<div class="sidebar-subheading">${cleanHeading}</div>`;
+        } else {
+          outputHtml += `<div class="sidebar-bullet-item"><span class="bullet-dot">•</span><div class="bullet-text">${escapeHtml(rawContent.replace(/\*\*/g, ''))}</div></div>`;
         }
+      });
+
+      return outputHtml || "<p class='sidebar-para'>None identified.</p>";
+    }
+
+    // ─── Dynamic Prompt Chips ───
+    function updateQuickPrompts(docType) {
+      const chipsContainer = document.getElementById("quickChipsBar");
+      const inputEl = document.getElementById("questionInput");
+      if (!chipsContainer || !inputEl) return;
+
+      const type = (docType || "").toLowerCase();
+      let chips = [];
+      let placeholder = "Ask a question about this document… (e.g. key insights or summary)";
+
+      if (type.includes("resume") || type.includes("cv") || type.includes("profile")) {
+        chips = [
+          { icon: "👤", label: "Candidate Profile", prompt: "Who is the candidate and what is their professional background and role?" },
+          { icon: "📝", label: "Summary", prompt: "Provide a concise bulleted summary of this candidate's profile." },
+          { icon: "🛠️", label: "Skills & Tech", prompt: "What are the primary technical skills, frameworks, and tools listed?" },
+          { icon: "💼", label: "Work History", prompt: "Summarize the candidate's work history, companies, and roles held." }
+        ];
+        placeholder = "Ask about this resume… (e.g. candidate skills, work history, or education)";
+      } else if (type.includes("invoice") || type.includes("receipt") || type.includes("bill") || type.includes("financial")) {
+        chips = [
+          { icon: "💵", label: "Invoice Total", prompt: "What is the total amount, subtotal, and tax listed in this invoice?" },
+          { icon: "🏢", label: "Vendor & Buyer", prompt: "Who is the vendor/seller and who is the client/billed party?" },
+          { icon: "📅", label: "Payment & Due Date", prompt: "What are the invoice date, payment due date, and payment terms?" },
+          { icon: "🧾", label: "Line Items", prompt: "List all individual line items with descriptions, quantities, and prices." }
+        ];
+        placeholder = "Ask about this invoice… (e.g. total amount due or vendor details)";
+      } else if (type.includes("contract") || type.includes("agreement") || type.includes("legal") || type.includes("terms")) {
+        chips = [
+          { icon: "📜", label: "Key Terms", prompt: "What are the key terms, obligations, and main purpose of this agreement?" },
+          { icon: "👥", label: "Parties Involved", prompt: "Who are the signing parties involved in this contract?" },
+          { icon: "⏳", label: "Term & Termination", prompt: "What is the effective date, contract duration, and termination policy?" },
+          { icon: "⚠️", label: "Liabilities & Risks", prompt: "What are the key liabilities, penalties, or compliance risks?" }
+        ];
+        placeholder = "Ask about this contract… (e.g. termination clause or key obligations)";
+      } else {
+        // Default / General document / Report
+        chips = [
+          { icon: "📝", label: "Executive Summary", prompt: "Provide a concise executive summary of this document." },
+          { icon: "🔍", label: "Key Takeaways", prompt: "What are the main findings, insights, and key takeaways in this document?" },
+          { icon: "⚠️", label: "Risks & Issues", prompt: "What risks, compliance concerns, or anomalies are highlighted?" },
+          { icon: "✅", label: "Action Items", prompt: "What are the recommended action items, requirements, or next steps?" }
+        ];
+        placeholder = "Ask a question about this document… (e.g. what are the key findings?)";
       }
 
-      // Paragraph formatting
-      const paras = str.split("\n\n").filter(p => p.trim());
-      return paras.map(p => `<p class="sidebar-para">${escapeHtml(p.trim())}</p>`).join("");
+      inputEl.placeholder = placeholder;
+      chipsContainer.innerHTML = chips.map(c => 
+        `<button class="quick-chip" onclick="askQuickPrompt('${c.prompt.replace(/'/g, "\\'")}')">${c.icon} ${c.label}</button>`
+      ).join("");
     }
 
     // ─── Load Document Info ───
@@ -748,6 +833,9 @@
         document.getElementById("docTitle").textContent = doc.filename;
         document.getElementById("docTypeTag").textContent = doc.doc_type || "document";
         
+        // Dynamically update quick chips based on doc_type
+        updateQuickPrompts(doc.doc_type);
+
         const statusTag = document.getElementById("docStatusTag");
         statusTag.textContent = doc.status;
         statusTag.className = `pill-badge status-${doc.status}`;
@@ -815,11 +903,22 @@
       const lines = html.split('\n');
       return lines.map(line => {
         let trimmed = line.trim();
-        if (trimmed.startsWith('•') || trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-          const content = trimmed.replace(/^[•\-\*]\s*/, '');
-          return `<div class="chat-bullet-row"><span class="chat-bullet-icon">•</span><div class="chat-bullet-text">${content}</div></div>`;
+        if (!trimmed) return '';
+
+        const isBullet = /^[•\-\*]\s*/.test(trimmed);
+        const rawContent = trimmed.replace(/^[•\-\*]\s*/, '').trim();
+
+        const isSubheading = rawContent.endsWith(':') || 
+                            rawContent.endsWith('</strong>:') || 
+                            rawContent.endsWith(':</strong>') ||
+                            /^<strong>.*:<\/strong>$/.test(rawContent);
+
+        if (isSubheading) {
+          return `<div class="chat-subheading">${rawContent}</div>`;
+        } else if (isBullet) {
+          return `<div class="chat-bullet-row"><span class="chat-bullet-icon">•</span><div class="chat-bullet-text">${rawContent}</div></div>`;
         }
-        return line ? `<div class="chat-text-line">${line}</div>` : '';
+        return `<div class="chat-text-line">${trimmed}</div>`;
       }).join('');
     }
 

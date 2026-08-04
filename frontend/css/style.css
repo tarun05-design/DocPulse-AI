@@ -272,8 +272,18 @@ nav a.active {
 }
 
 .profile-menu-header .email {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.profile-menu-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
 }
 
 .profile-menu a, .profile-menu button {
@@ -295,16 +305,28 @@ nav a.active {
   box-shadow: none;
 }
 
+.profile-menu a svg, .profile-menu button svg {
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
 .profile-menu a:hover, .profile-menu button:hover {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
   transform: none;
-  box-shadow: none;
 }
 
-.profile-menu button.logout-item:hover {
-  background: rgba(244, 63, 94, 0.1);
-  color: var(--accent-rose);
+.profile-menu a:hover svg, .profile-menu button:hover svg {
+  opacity: 1;
+}
+
+.profile-menu .logout-item {
+  color: #f87171;
+}
+
+.profile-menu .logout-item:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
 }
 
 /* ─── Page Container ─── */
@@ -1387,13 +1409,81 @@ tbody tr:hover {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
 .btn-link:hover {
-  color: var(--text-primary);
   background: rgba(255, 255, 255, 0.05);
-  box-shadow: none;
+  color: var(--text-primary);
   transform: none;
+}
+
+/* ─── Dashboard Overview Stat Cards ─── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px 22px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.3s var(--ease-spring);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(99, 102, 241, 0.35);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25), 0 0 15px rgba(99, 102, 241, 0.12);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.stat-card-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stat-card-icon.blue { background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.25); color: #818cf8; }
+.stat-card-icon.green { background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.25); color: #34d399; }
+.stat-card-icon.purple { background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.25); color: #c084fc; }
+.stat-card-icon.rose { background: rgba(244, 63, 94, 0.12); border: 1px solid rgba(244, 63, 94, 0.25); color: #fb7185; }
+
+.stat-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-card-num {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.stat-card-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 /* ─── Page Loader ─── */
