@@ -32,7 +32,8 @@ class Config:
     HF_LAYOUT_MODEL = os.environ.get("HF_LAYOUT_MODEL", "microsoft/layoutlmv3-base")
     HF_EMBEDDING_MODEL = os.environ.get("HF_EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 
-    FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "http://localhost:5500")
+    FRONTEND_ORIGIN = os.environ.get("FRONTEND_ORIGIN", "*")
+    DISABLE_HEAVY_MODELS = os.environ.get("DISABLE_HEAVY_MODELS", "true").lower() in ("true", "1", "t")
 
     MAX_CONTENT_LENGTH = 25 * 1024 * 1024  # 25 MB upload cap
 
