@@ -2,6 +2,10 @@
 
 > **Enterprise Document Intelligence Platform powered by Google Gemini 2.5 Flash, Multimodal OCR, Dense Vector RAG, Flask REST API, PostgreSQL, and Docker Containerization.**
 
+🌐 **Live Demo**: [https://doc-pulse-ai-seven.vercel.app/](https://doc-pulse-ai-seven.vercel.app/)
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-doc--pulse--ai--seven.vercel.app-00C7B7?style=for-the-badge&logo=vercel&logoColor=white)](https://doc-pulse-ai-seven.vercel.app/)
+
 [![Docker](https://img.shields.io/badge/Container-Docker%20%26%20Docker%20Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![Python 3.14](https://img.shields.io/badge/Language-Python%203.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Flask REST API](https://img.shields.io/badge/Backend-Flask%20REST%20API-000000?logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
